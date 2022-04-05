@@ -1,42 +1,46 @@
 #!/usr/bin/env python3
 
 import sys
-import argparse
 import scipy.integrate as ig
 from matplotlib import pyplot as plt
 import numpy as np
 
-# Set degradation rates and maximum production rates for mRNA and protein
-deg_rate_m = 10
-deg_rate_p = 1
-production_m_v, production_m_r = 100, 5
-max_protein_production = 1000
-
-
-
-''' Resource terms may all need to be re-framed into fractions of maximum possible resources?'''
-# resource consumption per protein - should this be per protein produced?
-store_consumption = 1
-# max resource level
-max_store = 100000
-# resource replenishment rate
-store_replenish = 1000
-# resource dilution rate - due to growth
-store_dilution = 10
-
-
-
-# contcentration constants -for now 
-K_p_v = 100000
-K_p_r = 1000
-K_store = 500
-
 # initial amounts of each product (mRNA and protein from each gene) and resource level (maybe number of ribosomes?)
 m_v_init = 10
 p_v_init = 100
-m_r_init = 1
+m_r_init = 2
 p_r_init = 10
-store_init = 80000
+
+# total number of ribosomes
+total_ribos = 190000
+# maximum number of ribosomes available for protein production - currently assume 80% of total
+max_avail_ribos = total_ribos*0.8
+
+
+# Maximum transcription and translation rates
+# transcription in codons per hour per cell : codons/sec * sec/hour * number of polymerases that can work at same time = codons/hour
+transcription_rate = 40 * 3600
+# translation in aas per hour per cell : aa/ribosome/sec * sec/hour * number of ribsomes which can be diverted = aa/hour
+translation_rate = 10 * 3600 * free_ribos
+
+
+# Set degradation rates and maximum production rates for mRNA and protein
+# rates based on half-life in h, ^-1
+deg_rate_m = 2
+deg_rate_p = 0.2
+
+# mRNA production rates - mix of copy number, promotor strength etc - will be scaled with transcription rate
+production_m_v, production_m_r = 100, 5
+
+# initial cell growth rate - in generations per hour - use as fitness parameter, if falls too low -> collapse
+dilution_rate = 0.3
+
+# contcentration constants - association/disassociation in one - need some ideas for this
+K_p_v = 1000000
+K_p_r = 100
+K_stock = max_avail_ribos / 2
+
+
 
 # Control functions. Currently Michaelis-menten-like (Hill functions, so far n = 1)
 def control_positive(substrate_conc, K):

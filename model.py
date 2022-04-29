@@ -9,7 +9,7 @@ import numpy as np
 m_v_init = 10
 p_v_init = 100
 m_r_init = 2
-p_r_init = 10
+p_r_init = 1
 
 # total number of ribosomes
 total_ribos = 190000
@@ -20,8 +20,8 @@ max_avail_ribos = total_ribos*0.8
 free_ribos_init = max_avail_ribos*0.9
 
 # Maximum transcription and translation rates
-# transcription in codons per hour per cell : codons/sec * sec/hour * number of polymerases that can work at same time = codons/hour
-transcription_rate = 40 * 3600 * 3
+# transcription in codons per hour per cell : codons/sec * sec/hour * number of polymerases that can work at same time on same DNA = codons/hour
+transcription_rate = 40/3 * 3600 * 3
 # maximum translation in aas per hour per cell : aa/ribosome/sec * sec/hour * number of ribsomes which can be diverted = aa/hour
 translation_rate = 10 * 3600 * max_avail_ribos
 
@@ -35,16 +35,15 @@ deg_rate_p = 0.2
 deg_rate_ribos = 0.15
 
 # mRNA production rates - mix of copy number, promotor strength etc - will be scaled with transcription rate
-production_m_v, production_m_r = 100, 5
+production_m_v, production_m_r = 1, 1
 
 # initial cell growth rate - in generations per hour - use as fitness parameter, if falls too low -> collapse
-dilution_rate_init = 0.3
-max_dilution_rate = 0.7
+dilution_rate_init = 0.5
+max_dilution_rate = 0.8
 
 # contcentration constants - association/disassociation in one - need some ideas for this
 K_p_v = 1000000
-K_p_r = 100
-K_stock = max_avail_ribos / 2
+K_p_r = 50
 
 
 
@@ -100,5 +99,7 @@ plt.title('regulator protein')
 plt.subplot(515)
 plt.plot(solution.t, solution.y[4].T)
 plt.title('free ribosomes')
+""" Add plot of growth rate"""
+
 #plt.legend(['m1', 'm2', 'p2', 'fitness index'])
 plt.show()

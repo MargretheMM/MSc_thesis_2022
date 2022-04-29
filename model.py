@@ -23,7 +23,8 @@ free_ribos_init = max_avail_ribos*0.9
 # transcription in codons per hour per cell : codons/sec * sec/hour * number of polymerases that can work at same time on same DNA = codons/hour
 transcription_rate = 40/3 * 3600 * 3
 # maximum translation in aas per hour per cell : aa/ribosome/sec * sec/hour * number of ribsomes which can be diverted = aa/hour
-translation_rate = 10 * 3600 * max_avail_ribos
+translation_rate_per_ribosome = 10 * 3600
+max_translation_rate = translation_rate_per_ribosome * max_avail_ribos
 
 # max rate of production of new ribosomes : max rate per minute * min/hour =  max ribos per hour
 max_ribos_manufacturing_rate = 2000 * 60
@@ -39,7 +40,7 @@ production_m_v, production_m_r = 1, 1
 
 # initial cell growth rate - in generations per hour - use as fitness parameter, if falls too low -> collapse
 dilution_rate_init = 0.5
-max_dilution_rate = 0.8
+max_dilution_rate = 1
 
 # contcentration constants - association/disassociation in one - need some ideas for this
 K_p_v = 1000000
@@ -66,13 +67,21 @@ def model(indep, init_deps):
     m_v, p_v, m_r, p_r, ribos, dilution = init_deps
 
     # equations
-    dm_v = control_negative(K_p_r, p_r) * production_m_v * transcription_rate - deg_rate_m * m_v
-    dp_v = translation_rate * control_positive(K_stock, ribos) * m_v - deg_rate_p * p_v - dilution_rate * p_v
-    dm_r = control_positive(K_p_v,p_v) * production_m_r * transcription_rate - deg_rate_m * m_r
-    dp_r = translation_rate * control_positive(K_stock, ribos) * m_r - deg_rate_p * p_r - dilution_rate * p_r
-    dribos = max_ribos_manufacturing_rate * control_positive(max_dilution_rate/2, dilution) - deg_rate_ribos * ribos - dilution * ribosome
-    if dilution > 0 and ribos < 
-
+    dm_v = transcription_rate * production_m_v *  control_negative(K_p_r, p_r)  - deg_rate_m * m_v
+    
+    dp_v = max_translation_rate * control_positive(K_stock, ribos) * m_v - (deg_rate_p + dilution) * p_v
+    
+    dm_r = transcription_rate * production_m_r * control_positive(K_p_v,p_v) - deg_rate_m * m_r
+    
+    dp_r = max_translation_rate * control_positive(K_stock, ribos) * m_r - (deg_rate_p + dilution) * p_r
+    
+    dribos = max_ribos_manufacturing_rate * dilution - translation_rate_per_ribosome ** -1 * m_v - (deg_rate_ribos + dilution) * ribos
+    
+    if dilution > 0 and dilution < max_dilution_rate:
+        ddilution = 10**-6 * (ribos/(max_avail_ribos/2) - 1)
+    else:
+        ddilution = 0
+          
     return [dm_v, dp_v, dm_r, dp_r, dribos, ddilution]
 
 # list of initial conditions
@@ -84,22 +93,24 @@ t = np.linspace(0, 200, 1000)
 # solving the ODE system
 solution = ig.solve_ivp(model, [min(t),max(t)], inits, t_eval = t)
 plt.figure(1)
-plt.subplot(511)
+plt.subplot(611)
 plt.plot(solution.t, solution.y[1].T)
 plt.title('POI over time')
-plt.subplot(512)
+plt.subplot(612)
 plt.plot(solution.t, solution.y[0].T)
 plt.title('mRNA of gene 1')
-plt.subplot(513)
+plt.subplot(613)
 plt.plot(solution.t, solution.y[2].T)
 plt.title('mRNA of gene 2')
-plt.subplot(514)
+plt.subplot(614)
 plt.plot(solution.t, solution.y[3].T)
 plt.title('regulator protein')
-plt.subplot(515)
+plt.subplot(615)
 plt.plot(solution.t, solution.y[4].T)
 plt.title('free ribosomes')
-""" Add plot of growth rate"""
+plt.subplot(616)
+plt.plot(solution.t, solution.y[5].T)
+plt.title('growth rate)
 
 #plt.legend(['m1', 'm2', 'p2', 'fitness index'])
 plt.show()

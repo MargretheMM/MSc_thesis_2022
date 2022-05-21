@@ -17,10 +17,13 @@ s_init = s_max*0.7
 s_half = s_max / 2
 
 # total number of RNA polymerases in cell - 
-total_pol = 35000
+total_pol = 30000
+
+# Maximum number of protein bound amino acids in cell - futcher et al 1999
+max_p = 3 * 10 ** 10
 
 # Maximum transcription and translation rates
-# transcription in codons per hour per cell : codons/sec * sec/hour *number of polymerases = codons/hour - Nielsen 2019
+# max transcription in codons per hour per cell : codons/sec * sec/hour *number of polymerases = codons/hour - Nielsen 2019
 beta_m = 50/3 * 3600 * total_pol
 # maximum translation in aas per hour per cell : aa/ribosome/sec * sec/hour * number of ribsomes which can be diverted = aa/hour
 delta_s = 10 * 3600
@@ -29,7 +32,7 @@ beta_p = delta_s * s_max
 # max rate of production of new ribosomes : max rate per minute * min/hour =  max s per hour
 beta_s = 2000 * 60
 
-# Set degradation rates and maximum production rates for mRNA and protein and ribosomes - Nielsen 2019 and ???
+# Set degradation rates and maximum production rates for mRNA and protein and ribosomes - Nielsen 2019 and Christiano 2020
 # rates based on half-life in h^-1
 alpha_m_v = 2
 alpha_p_v = 0.2
@@ -49,7 +52,7 @@ delta_m_v, delta_m_r = 10, 1
 
 # regulator degradation rates
 alpha_m_r = 2
-alpha_p_r = 0.2
+alpha_p_r = 1
 
 ''' Initial conditions'''
 # initial amounts of each product (mRNA and protein from each gene)

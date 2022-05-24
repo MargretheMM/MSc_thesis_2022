@@ -5,10 +5,11 @@ import scipy.integrate as ig
 from matplotlib import pyplot as plt
 import numpy as np
 
+
 ''' Model parameters - biologically based '''
 
 # total number of ribosomes - von der Haar 2008
-total_s = 200000
+total_s = 2e5
 # maximum number of ribosomes available for protein production - currently assume 95% of total - Metzl-Raz 2017
 s_max = total_s*0.95
 #initally, most ribosomes are available
@@ -16,27 +17,27 @@ s_init = s_max*0.7
 # half full stock
 s_half = s_max / 2
 
-# total number of RNA polymerases in cell - 
+# total number of RNA polymerases in cell - Borggrefe 2001
 total_pol = 30000
 
 # Maximum number of protein bound amino acids in cell - futcher et al 1999
-max_p = 3 * 10 ** 10
+max_p = 3e10
 
 # Maximum transcription and translation rates
-# max transcription in codons per hour per cell : codons/sec * sec/hour *number of polymerases = codons/hour - Nielsen 2019
+# max transcription in codons per hour per cell : codons/sec * sec/hour *number of polymerases = codons/hour - Yu and Nielsen 2019
 beta_m = 50/3 * 3600 * total_pol
 # maximum translation in aas per hour per cell : aa/ribosome/sec * sec/hour * number of ribsomes which can be diverted = aa/hour
 delta_s = 10 * 3600
 beta_p = delta_s * s_max
 
-# max rate of production of new ribosomes : max rate per minute * min/hour =  max s per hour
+# max rate of production of new ribosomes : max rate per minute * min/hour =  max s per hour - Warner 1999
 beta_s = 2000 * 60
 
-# Set degradation rates and maximum production rates for mRNA and protein and ribosomes - Nielsen 2019 and Christiano 2020
+# Set degradation rates and maximum production rates for mRNA and protein and ribosomes - mRNA: Curran et al 2013, Perez-Ortin et al 2007, protein Christiano 2020
 # rates based on half-life in h^-1
-alpha_m_v = 2
-alpha_p_v = 0.2
-alpha_s = 0.15
+alpha_m_v = np.log(2)/0.33
+alpha_p_v = np.log(2)/5
+alpha_s = np.log(2)/6
 
 # maximum growth rate in h^-1 
 max_gamma = 1
@@ -44,24 +45,24 @@ max_gamma = 1
 
 ''' Presumed engineerable paramters '''
 # contcentration constants - association/disassociation in one - need some ideas for this
-K_p_v = 1000000
+K_p_v = 1e6
 K_p_r = 50
 
 # mRNA production rates - mix of copy number, promotor strength etc - will be scaled with transcription rate
-delta_m_v, delta_m_r = 10, 1
+delta_m_v, delta_m_r = 10, 0.2
 
 # regulator degradation rates
-alpha_m_r = 2
-alpha_p_r = 1
+alpha_m_r = np.log(2)/0.33
+alpha_p_r = np.log(2)/1
 
 ''' Initial conditions'''
 # initial amounts of each product (mRNA and protein from each gene)
-m_v_init = 10
-p_v_init = 1000
+m_v_init = 1
+p_v_init = 10
 m_r_init = 1
-p_r_init = 1
+p_r_init = 0
 # initial cell growth rate - in h^-1 - use as fitness parameter, if falls too low -> collapse
-gamma_init = 0.5
+gamma_init = 0.4
 
 
 '''Functions and model '''
@@ -111,33 +112,38 @@ t = np.linspace(0, 200, 1000)
 
 # solving the ODE system
 solution = ig.solve_ivp(model, [min(t),max(t)], inits, t_eval = t)
-plt.figure(1)
-plt.subplot(611)
-plt.plot(solution.t, solution.y[0].T)
-plt.title('mRNA of gene of value')
-plt.subplot(612)
-plt.plot(solution.t, solution.y[1].T)
-plt.title('Protein of value')
-plt.subplot(613)
-plt.plot(solution.t, solution.y[2].T)
-plt.title('mRNA of regulator')
-plt.subplot(614)
-plt.plot(solution.t, solution.y[3].T)
-plt.title('Regulator protein')
-plt.subplot(615)
-plt.plot(solution.t, solution.y[4].T)
-plt.title('Free ribosomes')
-plt.subplot(616)
-plt.plot(solution.t, solution.y[5].T)
-plt.title('Growth rate')
-plt.ylim(0, 1)
+fig, axs = plt.subplots(6,2)
+axs[0, 0].plot(solution.t, solution.y[0].T)
+axs[0, 0].set_title('mRNA of gene of value')
+axs[1, 0].plot(solution.t, solution.y[1].T)
+axs[1, 0].set_title('Protein of value')
+axs[1, 0].sharex(axs[0, 0])
+axs[2, 0].plot(solution.t, solution.y[2].T)
+axs[2, 0].set_title('mRNA of regulator')
+axs[2, 0].sharex(axs[0, 0])
+axs[3, 0].plot(solution.t, solution.y[3].T)
+axs[3, 0].set_title('Regulator protein')
+axs[3, 0].sharex(axs[0, 0])
+axs[4, 0].plot(solution.t, solution.y[4].T)
+axs[4, 0].set_title('Free ribosomes')
+axs[4, 0].sharex(axs[0, 0])
+axs[5, 0].plot(solution.t, solution.y[5].T)
+axs[5, 0].set_title('Growth rate')
+axs[5, 0].sharex(axs[0, 0])
+axs[5, 0].set_xlabel('Time in hours')
+axs[0, 1].plot(solution.y[0].T, solution.y[1].T)
+axs[0, 1].set_title('state space prot val vs mRNA val')
+#axs[0, 1].set_xlabel('mRNA of value')
+#axs[0, 1].set_ylabel('protein of value')
+axs[1, 1].plot(solution.y[1].T, solution.y[3].T)
+axs[1, 1].set_title('state space reg prot vs prot val')
+#axs[1, 1].set_xlabel('protein of value')
+#axs[1, 1].set_ylabel('regulator protein')
+axs[2, 1].plot(solution.y[1].T, solution.y[4].T)
+axs[2, 1].set_title('state space free ribosomes vs prot val')
+#axs[2, 1].set_xlabel('protein of value')
+#axs[2, 1].set_ylabel('free ribosomes')
 
-#plt.legend(['m1', 'm2', 'p2', 'fitness index'])
-plt.subplots_adjust(left=0.1,
-                    bottom=0.1, 
-                    right=0.9, 
-                    top=0.9, 
-                    wspace=0.4, 
-                    hspace=0.7)
+plt.subplots_adjust(hspace=0.7)
 plt.suptitle('Plots for delta_mv: ' + str(delta_m_v) + 'and delta_mr: ' + str(delta_m_r), fontsize=14)
 plt.show()

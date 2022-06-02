@@ -21,7 +21,7 @@ s_half = s_max / 2
 total_pol = 30000
 
 # Maximum number of protein bound amino acids in cell - futcher et al 1999
-max_p = 3e10
+p_max = 3e10
 
 # Maximum transcription and translation rates
 # max transcription in codons per hour per cell : codons/sec * sec/hour *number of polymerases = codons/hour - Yu and Nielsen 2019
@@ -40,7 +40,7 @@ alpha_p_v = np.log(2)/5
 alpha_s = np.log(2)/6
 
 # maximum growth rate in h^-1 
-max_gamma = 1
+gamma_max = 1
 
 
 ''' Presumed engineerable paramters '''
@@ -82,22 +82,31 @@ def model(indep: float, init_deps):
     Output: list of equations in the system 
     '''
     m_v, p_v, m_r, p_r, s, gamma = init_deps
-
+    
+    # protein level in model
+    p_tot = p_v + p_r + s * 12e3
+    
     # equations
     dm_v = beta_m * delta_m_v *  control_negative(K_p_r, p_r)  - alpha_m_v * m_v
     
-    dp_v = beta_p * control_positive(s_half, s) * m_v - (alpha_p_v + gamma) * p_v
-    
+    if (0 < p_tot < p_max):
+        dp_v = beta_p * control_positive(s_half, s) * m_v - (alpha_p_v + gamma) * p_v
+    else:
+        dp_v = 0
+
     dm_r = beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_r * m_r
     
-    dp_r = beta_p * control_positive(s_half, s) * m_r - (alpha_p_r + gamma) * p_r
-    
+    if (0 < p_tot < p_max):
+        dp_r = beta_p * control_positive(s_half, s) * m_r - (alpha_p_r + gamma) * p_r
+    else:
+        dp_r = 0
+  
     if (0 < s < s_max):
         ds = beta_s * gamma - delta_s ** -1 * m_v - (alpha_s + gamma) * s
     else:
         ds = 0
     
-    if (0 < gamma < max_gamma):
+    if (0 < gamma < gamma_max):
         dgamma = 0.1* (s/s_half - 1)
     else:
         dgamma = 0

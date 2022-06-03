@@ -34,7 +34,7 @@ beta_p = delta_s * s_max
 beta_s = 2000 * 60
 
 # Set degradation rates and maximum production rates for mRNA and protein and ribosomes - mRNA: Curran et al 2013, Perez-Ortin et al 2007, protein Christiano 2020
-# rates based on half-life in h^-1
+# rates based on half-life in h
 alpha_m_v = np.log(2)/0.33
 alpha_p_v = np.log(2)/5
 alpha_s = np.log(2)/6
@@ -42,6 +42,11 @@ alpha_s = np.log(2)/6
 # maximum growth rate in h^-1 
 gamma_max = 1
 
+# proportionality constants
+# protein level influence on ribosome production
+delta_p = 1e-8
+# ribosome number influence on growth rate
+delta_gamma = 0.1
 
 ''' Presumed engineerable paramters '''
 # contcentration constants - association/disassociation in one - need some ideas for this
@@ -49,7 +54,7 @@ K_p_v = 1e6
 K_p_r = 50
 
 # mRNA production rates - mix of copy number, promotor strength etc - will be scaled with transcription rate
-delta_m_v, delta_m_r = 10, 0.2
+delta_m_v, delta_m_r = 1, 1
 
 # regulator degradation rates
 alpha_m_r = np.log(2)/0.33
@@ -102,12 +107,12 @@ def model(indep: float, init_deps):
         dp_r = 0
   
     if (0 < s < s_max):
-        ds = beta_s * gamma - delta_s ** -1 * m_v - (alpha_s + gamma) * s
+        ds = beta_s * gamma - delta_s ** -1 * m_v - delta_p * (p_v + p_r) - (alpha_s + gamma) * s
     else:
         ds = 0
     
     if (0 < gamma < gamma_max):
-        dgamma = 0.1* (s/s_half - 1)
+        dgamma = delta_gamma * (s/s_half - 1)
     else:
         dgamma = 0
           
@@ -147,16 +152,11 @@ axs['gr'].sharex(axs['mv'])
 axs['gr'].set_xlabel('Time in hours')
 axs['pv_vs_mv'].plot(solution.y[0].T, solution.y[1].T)
 axs['pv_vs_mv'].set_title('state space prot val vs mRNA val')
-#axs[0, 1].set_xlabel('mRNA of value')
-#axs[0, 1].set_ylabel('protein of value')
 axs['pr_vs_pv'].plot(solution.y[1].T, solution.y[3].T)
 axs['pr_vs_pv'].set_title('state space reg prot vs prot val')
-#axs[1, 1].set_xlabel('protein of value')
-#axs[1, 1].set_ylabel('regulator protein')
 axs['fr_vs_pv'].plot(solution.y[1].T, solution.y[4].T)
 axs['fr_vs_pv'].set_title('state space free ribosomes vs prot val')
-#axs[2, 1].set_xlabel('protein of value')
-#axs[2, 1].set_ylabel('free ribosomes')
+
 
 plt.subplots_adjust(hspace=0.7)
 plt.suptitle('Plots for delta_mv: ' + str(delta_m_v) + 'and delta_mr: ' + str(delta_m_r), fontsize=14)

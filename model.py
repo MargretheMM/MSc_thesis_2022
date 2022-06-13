@@ -8,14 +8,9 @@ import numpy as np
 
 ''' Model parameters - biologically based '''
 
-# total number of ribosomes - von der Haar 2008
-total_s = 2e5
-# maximum number of ribosomes available for protein production - currently assume 95% of total - Metzl-Raz 2017
-s_max = total_s*0.95
-#initally, most ribosomes are available
-s_init = s_max*0.7
-# half full stock
-s_half = s_max / 2
+# maximum number of ribosomes available for protein production - currently assume 95% of total - Metzl-Raz 2017 and von der Haar 2008
+R= 2e5*0.95
+
 
 # total number of RNA polymerases in cell - Borggrefe 2001
 total_pol = 30000
@@ -27,26 +22,15 @@ p_max = 3e10
 # max transcription in codons per hour per cell : codons/sec * sec/hour *number of polymerases = codons/hour - Yu and Nielsen 2019
 beta_m = 50/3 * 3600 * total_pol
 # maximum translation in aas per hour per cell : aa/ribosome/sec * sec/hour * number of ribsomes which can be diverted = aa/hour
-delta_s = 10 * 3600
-beta_p = delta_s * s_max
+delta_R = 10 * 3600
+beta_p = delta_R * R
 
-# max rate of production of new ribosomes : max rate per minute * min/hour =  max s per hour - Warner 1999
-beta_s = 2000 * 60
 
-# Set degradation rates and maximum production rates for mRNA and protein and ribosomes - mRNA: Curran et al 2013, Perez-Ortin et al 2007, protein Christiano 2020
+# Set degradation rates and maximum production rates for mRNA and protein - mRNA: Curran et al 2013, Perez-Ortin et al 2007, protein Christiano 2020
 # rates based on half-life in h
 alpha_m_v = np.log(2)/0.33
 alpha_p_v = np.log(2)/5
-alpha_s = np.log(2)/6
 
-# maximum growth rate in h^-1 
-gamma_max = 1
-
-# proportionality constants
-# protein level influence on ribosome production
-delta_p = 1e-8
-# ribosome number influence on growth rate
-delta_gamma = 0.1
 
 ''' Presumed engineerable paramters '''
 # contcentration constants - association/disassociation in one - need some ideas for this
@@ -54,7 +38,7 @@ K_p_v = 1e6
 K_p_r = 50
 
 # mRNA production rates - mix of copy number, promotor strength etc - will be scaled with transcription rate
-delta_m_v, delta_m_r = 1, 1
+delta_m_v, delta_m_r = 1, 1e-4
 
 # regulator degradation rates
 alpha_m_r = np.log(2)/0.33
@@ -62,12 +46,12 @@ alpha_p_r = np.log(2)/1
 
 ''' Initial conditions'''
 # initial amounts of each product (mRNA and protein from each gene)
-m_v_init = 1
-p_v_init = 10
+m_v_init = 5
+p_v_init = 100
 m_r_init = 1
 p_r_init = 0
-# initial cell growth rate - in h^-1 - use as fitness parameter, if falls too low -> collapse
-gamma_init = 0.4
+R_v_init = 5
+R_o_init = R-R_v_init
 
 
 '''Functions and model '''
@@ -86,40 +70,38 @@ def model(indep: float, init_deps):
     Input: independent variable, initial values of dependent variables (list)
     Output: list of equations in the system 
     '''
-    m_v, p_v, m_r, p_r, s, gamma = init_deps
+    m_v, p_v, m_r, p_r, R_v, R_o = init_deps
     
     # protein level in model
-    p_tot = p_v + p_r + s * 12e3
+    p_tot = p_v + p_r + R * 12e3
     
     # equations
     dm_v = beta_m * delta_m_v *  control_negative(K_p_r, p_r)  - alpha_m_v * m_v
     
     if (0 < p_tot < p_max):
-        dp_v = beta_p * control_positive(s_half, s) * m_v - (alpha_p_v + gamma) * p_v
+        dp_v = beta_p * R_v - alpha_p_v * p_v
     else:
         dp_v = 0
 
     dm_r = beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_r * m_r
     
     if (0 < p_tot < p_max):
-        dp_r = beta_p * control_positive(s_half, s) * m_r - (alpha_p_r + gamma) * p_r
+        dp_r = beta_p * R_o * m_r/5e7  - alpha_p_r * p_r
+        # 5 e 7 estimate of total amount of mRNA in cell
     else:
         dp_r = 0
   
-    if (0 < s < s_max):
-        ds = beta_s * gamma - delta_s ** -1 * m_v - delta_p * (p_v + p_r) - (alpha_s + gamma) * s
+    if (0 < R_v < R):
+        dR_v = delta_R ** -1 * (dm_v * p_v/(1-p_v/p_max) + m_v * dp_v * p_max ** 2 / (p_max-p_v) ** 2  
     else:
-        ds = 0
+        dR_v = 0
     
-    if (0 < gamma < gamma_max):
-        dgamma = delta_gamma * (s/s_half - 1)
-    else:
-        dgamma = 0
+    dR_o = - dR_v
           
-    return [dm_v, dp_v, dm_r, dp_r, ds, dgamma]
+    return [dm_v, dp_v, dm_r, dp_r, dR_v, dR_o]
 
 # list of initial conditions
-inits = [m_v_init, p_v_init, m_r_init, p_r_init, s_init, gamma_init]
+inits = [m_v_init, p_v_init, m_r_init, p_r_init, R_v_init, R_o_init]
 
 # time steps
 t = np.linspace(0, 200, 1000)
@@ -144,10 +126,10 @@ axs['pr'].plot(solution.t, solution.y[3].T)
 axs['pr'].set_title('Regulator protein')
 axs['pr'].sharex(axs['mv'])
 axs['fr'].plot(solution.t, solution.y[4].T)
-axs['fr'].set_title('Free ribosomes')
+axs['fr'].set_title('Value productive ribosomes')
 axs['fr'].sharex(axs['mv'])
 axs['gr'].plot(solution.t, solution.y[5].T)
-axs['gr'].set_title('Growth rate')
+axs['gr'].set_title('Other ribosomes')
 axs['gr'].sharex(axs['mv'])
 axs['gr'].set_xlabel('Time in hours')
 axs['pv_vs_mv'].plot(solution.y[0].T, solution.y[1].T)

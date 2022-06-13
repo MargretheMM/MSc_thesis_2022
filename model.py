@@ -21,9 +21,8 @@ p_max = 3e10
 # Maximum transcription and translation rates
 # max transcription in codons per hour per cell : codons/sec * sec/hour *number of polymerases = codons/hour - Yu and Nielsen 2019
 beta_m = 50/3 * 3600 * total_pol
-# maximum translation in aas per hour per cell : aa/ribosome/sec * sec/hour * number of ribsomes which can be diverted = aa/hour
-delta_R = 10 * 3600
-beta_p = delta_R * R
+# maximum translation in aas per hour per ribosome : aa/ribosome/sec * sec/hour = aa/hour
+beta_p = 10 * 3600
 
 
 # Set degradation rates and maximum production rates for mRNA and protein - mRNA: Curran et al 2013, Perez-Ortin et al 2007, protein Christiano 2020
@@ -38,7 +37,7 @@ K_p_v = 1e6
 K_p_r = 50
 
 # mRNA production rates - mix of copy number, promotor strength etc - will be scaled with transcription rate
-delta_m_v, delta_m_r = 1, 1e-4
+delta_m_v, delta_m_r = 1, 0.002
 
 # regulator degradation rates
 alpha_m_r = np.log(2)/0.33
@@ -75,6 +74,9 @@ def model(indep: float, init_deps):
     # protein level in model
     p_tot = p_v + p_r + R * 12e3
     
+    # cost function
+    C = p_max*p_v/(p_max-p_v)
+    
     # equations
     dm_v = beta_m * delta_m_v *  control_negative(K_p_r, p_r)  - alpha_m_v * m_v
     
@@ -86,13 +88,13 @@ def model(indep: float, init_deps):
     dm_r = beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_r * m_r
     
     if (0 < p_tot < p_max):
-        dp_r = beta_p * R_o * m_r/5e7  - alpha_p_r * p_r
-        # 5 e 7 estimate of total amount of mRNA in cell
+        dp_r = beta_p * R_o * m_r/(5e7-m_v)  - alpha_p_r * p_r
+        # 5e7 estimate of total amount of mRNA in cell
     else:
         dp_r = 0
   
     if (0 < R_v < R):
-        dR_v = delta_R ** -1 * (dm_v * p_v/(1-p_v/p_max) + m_v * dp_v * p_max ** 2 / (p_max-p_v) ** 2  
+        dR_v = beta_p ** -1 * (dm_v * C + m_v * dp_v * p_max ** 2 / (p_max-p_v) ** 2 ) 
     else:
         dR_v = 0
     

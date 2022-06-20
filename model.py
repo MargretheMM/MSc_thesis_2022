@@ -9,7 +9,7 @@ import numpy as np
 ''' Model parameters - biologically based '''
 
 # maximum number of ribosomes available for protein production - currently assume 95% of total - Metzl-Raz 2017 and von der Haar 2008
-R_max= 2e5*0.95
+R_max= 2e5 * 0.95
 
 
 # total number of RNA polymerases in cell - Borggrefe 2001
@@ -59,7 +59,7 @@ m_v_init = 5
 p_v_init = 100
 m_r_init = 0
 p_r_init = 0
-R_init = R_max *0.99
+R_init = R_max * 0.99
 R_v_init = 5
 R_o_init = R_init - R_v_init
 

@@ -8,6 +8,8 @@ import numpy as np
 
 ''' Model parameters - biologically based '''
 
+ENSURE_POSITIVE = True
+
 # maximum number of ribosomes available for protein production - currently assume 95% of total - Metzl-Raz 2017 and von der Haar 2008
 R_max= 2e5 * 0.95
 
@@ -63,10 +65,10 @@ R_init = R_max * 0.99
 R_v_init = 5
 R_o_init = R_init - R_v_init
 
-
 '''Functions and model '''
 # Control functions -  Michaelis-menten-like
 def control_positive(K, substrate):
+    assert substrate >= 0
     return substrate/(K+substrate)
 
 def control_negative(K, substrate):
@@ -77,6 +79,21 @@ def no_growth(t,y): return y[6]-1
 # stop simulation if this happens
 #no_growth.terminal = True
 
+steps = []
+rates = []
+
+step_number = 0
+
+def pretty_print_labels():
+    parts = "step, time, m_v, p_v, m_r, p_r, R, R_v, R_o".split(", ")
+    parts = ["%9s" % key for key in parts]
+    print("".join(parts))
+
+def pretty_print_values(step, timestamp, values):
+    ts = ("%7.2f" % timestamp) if timestamp is not None else " " * 9
+    vals = ["%1.2g" % value for value in values]
+    print(("%9d" % step) if step else " "*7, ts, "".join("%9s" % value for value in vals))
+
 # write up equations
 def model(indep: float, init_deps):
     '''
@@ -84,8 +101,25 @@ def model(indep: float, init_deps):
     Input: independent variable, initial values of dependent variables (list)
     Output: list of equations in the system 
     '''
+    global step_number
+    step_number += 1
+    steps.append((step_number, indep, init_deps))
+    if ENSURE_POSITIVE:
+        init_deps = [max(val, 0) for val in init_deps]
     m_v, p_v, m_r, p_r, R, R_v, R_o = init_deps
-    
+    if R == 0:
+        R = 1
+
+    for thing in init_deps[:-1]:  # skip R_o
+        if thing < 0:
+            pretty_print_labels()
+            for step, timestamp, values in steps[-3:]:
+                pretty_print_values(step, timestamp, values)
+            print("previous rates")
+            for values in rates[-3:]:
+                pretty_print_values(None, None, values)
+            assert thing >= 0, thing
+
     # protein level in model
     p_tot = p_v + p_r + R * 12e3
     
@@ -95,11 +129,15 @@ def model(indep: float, init_deps):
     # equations
     if (0 < m_v < m_tot):
         dm_v = beta_m * delta_m_v *  control_negative(K_p_r, p_r)  - alpha_m_v * m_v
+        if -dm_v > m_v:
+            dm_v = -m_v
     else:
         dm_v = 0
-            
+
     if (0 < p_tot < p_max):
         dp_v = beta_p * control_positive(K_R,R) * control_positive(K_m_v,m_v) - (alpha_p_v + gamma) * p_v
+    elif p_tot > 0:
+        dp_v = p_tot - p_max
     else:
         dp_v = 0
 
@@ -107,7 +145,6 @@ def model(indep: float, init_deps):
     
     if (0 < p_tot < p_max):
         dp_r = beta_p * R_o * m_r/(m_tot - m_v)  - (alpha_p_r + gamma) * p_r
-
     else:
         dp_r = 0
   
@@ -117,10 +154,14 @@ def model(indep: float, init_deps):
         dR = 0
     
     dR_v = m_tot ** -1 * (dR * m_v + R * dm_v)
+    if -dR_v > R_v:
+        dR_v = -R_v
     
     dR_o = dR - dR_v
 
-    return [dm_v, dp_v, dm_r, dp_r, dR, dR_v, dR_o]
+    res = [dm_v, dp_v, dm_r, dp_r, dR, dR_v, dR_o]
+    rates.append(res)
+    return res
 
 # list of initial conditions
 inits = [m_v_init, p_v_init, m_r_init, p_r_init, R_init, R_v_init, R_o_init]

@@ -136,7 +136,7 @@ def model(indep: float, init_deps):
         dm_v = 0
 
     if (0 < p_tot < p_max):
-        dp_v = beta_p * R_v * m_v * control_positive(K_R,R) * control_positive(K_m_v,m_v) - (alpha_p_v + gamma) * p_v
+        dp_v = beta_p * R_v * m_v * control_positive(K_R,R_v) * control_positive(K_m_v,m_v) - (alpha_p_v + gamma) * p_v
     elif p_tot >= p_max:
         dp_v =  -(alpha_p_v + gamma) * p_v
     else:

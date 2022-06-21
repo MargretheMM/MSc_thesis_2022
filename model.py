@@ -73,7 +73,7 @@ def control_negative(K, substrate):
     return K/(K+substrate)
 
 # tracking if growth stops (R_o hits zero)
-#def no_growth(t,y): return y[6]
+def no_growth(t,y): return y[6]-1
 # stop simulation if this happens
 #no_growth.terminal = True
 
@@ -128,7 +128,7 @@ inits = [m_v_init, p_v_init, m_r_init, p_r_init, R_init, R_v_init, R_o_init]
 t = np.linspace(0, 200, 1000)
 
 # solving the ODE system
-solution = ig.solve_ivp(model, [min(t),max(t)], inits, t_eval = t)
+solution = ig.solve_ivp(model, [min(t),max(t)], inits, t_eval = t, events = no_growth)
 #, events=no_growth)
 fig, axs = plt.subplot_mosaic([['mv', 'pv_vs_mv'],
                                ['pv', 'pv_vs_mv'],

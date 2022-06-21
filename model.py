@@ -129,15 +129,15 @@ def model(indep: float, init_deps):
     # equations
     if (0 < m_v < m_tot):
         dm_v = beta_m * delta_m_v *  control_negative(K_p_r, p_r)  - alpha_m_v * m_v
-        if -dm_v > m_v:
-            dm_v = -m_v
+    elif m_v >= m_tot:
+        dm_v =  - alpha_m_v * m_v
     else:
         dm_v = 0
 
     if (0 < p_tot < p_max):
-        dp_v = beta_p * control_positive(K_R,R) * control_positive(K_m_v,m_v) - (alpha_p_v + gamma) * p_v
-    elif p_tot > 0:
-        dp_v = p_tot - p_max
+        dp_v = beta_p * R_v * m_v * control_positive(K_R,R) * control_positive(K_m_v,m_v) - (alpha_p_v + gamma) * p_v
+    elif p_tot >= p_max:
+        dp_v =  -(alpha_p_v + gamma) * p_v
     else:
         dp_v = 0
 
@@ -145,17 +145,19 @@ def model(indep: float, init_deps):
     
     if (0 < p_tot < p_max):
         dp_r = beta_p * R_o * m_r/(m_tot - m_v)  - (alpha_p_r + gamma) * p_r
+    elif p_tot >= p_max:
+        dp_r =  -(alpha_p_r + gamma) * p_r
     else:
         dp_r = 0
   
     if (0 < R < R_max):
         dR = beta_R * R_o / R_max - (alpha_R + gamma) * R
+    elif R >= R_max:
+        dR =  -(alpha_R + gamma) * R
     else:
         dR = 0
     
-    dR_v = m_tot ** -1 * (dR * m_v + R * dm_v)
-    if -dR_v > R_v:
-        dR_v = -R_v
+    dR_v = (dR * m_v + R * dm_v) / m_tot
     
     dR_o = dR - dR_v
 

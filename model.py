@@ -45,11 +45,11 @@ k=np.log(2)/80
 # contcentration constants - association/disassociation in one - need some ideas for this
 K_p_v = 1e6
 K_p_r = 50
-K_m_v = 1e2
-K_R = 0.1 * R_max
+K_m_v = 1e5
+K_R = 0.5 * R_max
 
 # mRNA production rates - mix of copy number, promotor strength etc - will be scaled with transcription rate
-delta_m_v, delta_m_r = 0.5, 0
+delta_m_v, delta_m_r = 1, 0
 
 # regulator degradation rates
 alpha_m_r = np.log(2)/20

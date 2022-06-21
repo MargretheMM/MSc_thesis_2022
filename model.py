@@ -8,7 +8,7 @@ import numpy as np
 
 ''' Model parameters - biologically based '''
 
-ENSURE_POSITIVE = True
+ENSURE_POSITIVE = False
 
 # maximum number of ribosomes available for protein production - currently assume 95% of total - Metzl-Raz 2017 and von der Haar 2008
 R_max= 2e5 * 0.95
@@ -72,12 +72,13 @@ def control_positive(K, substrate):
     return substrate/(K+substrate)
 
 def control_negative(K, substrate):
+    assert substrate >= 0
     return K/(K+substrate)
 
 # tracking if growth stops (R_o hits zero)
 def no_growth(t,y): return y[6]-1
 # stop simulation if this happens
-#no_growth.terminal = True
+no_growth.terminal = True
 
 steps = []
 rates = []

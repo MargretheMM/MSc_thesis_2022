@@ -44,10 +44,10 @@ k=np.log(2)*3/4
 K_p_v = 1e6
 K_p_r = 50
 K_m_v = 1e2
-K_R = 0.5 * R_max
+K_R = 0.1 * R_max
 
 # mRNA production rates - mix of copy number, promotor strength etc - will be scaled with transcription rate
-delta_m_v, delta_m_r = 0.2, 0
+delta_m_v, delta_m_r = 0.5, 0
 
 # regulator degradation rates
 alpha_m_r = np.log(2)/0.33

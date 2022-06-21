@@ -110,8 +110,7 @@ def model(indep: float, init_deps):
     m_v, p_v, m_r, p_r, R, R_v, R_o = init_deps
     if R == 0:
         R = 1
-
-    for thing in init_deps[:-1]:  # skip R_o
+    for thing in init_deps:
         if thing < 0:
             pretty_print_labels()
             for step, timestamp, values in steps[-3:]:

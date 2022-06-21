@@ -128,7 +128,7 @@ def model(indep: float, init_deps):
     
     # equations
     if (0 < m_v < m_tot):
-        dm_v = beta_m * delta_m_v *  control_negative(K_p_r, p_r)  - alpha_m_v * m_v
+        dm_v = beta_m * delta_m_v * control_negative(K_p_r, p_r) - alpha_m_v * m_v
     elif m_v >= m_tot:
         dm_v =  - alpha_m_v * m_v
     else:

@@ -113,12 +113,13 @@ def model(indep: float, init_deps):
   
     if (0 < R < R_max):
         dR = beta_R * R_o / R_max - (alpha_R + gamma) * R
-    else:        dR = 0
+    else:
+        dR = 0
     
     dR_v = m_tot ** -1 * (dR * m_v + R * dm_v)
     
     dR_o = dR - dR_v
-#    print(p_v)
+
     return [dm_v, dp_v, dm_r, dp_r, dR, dR_v, dR_o]
 
 # list of initial conditions

@@ -24,7 +24,7 @@ m_tot = 3e7
 
 # Maximum transcription and translation rates
 # max transcription in codons per minute per cell : codons/sec * sec/minute *number of polymerases = codons/minute Yu and Nielsen 2019
-beta_m = 50/3 * 60 * total_pol
+beta_m = 50/3 * 60
 # maximum translation in aas per minute per ribosome : aa/ribosome/sec * sec/minute = aa/minute
 beta_p = 10 * 60
 

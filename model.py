@@ -45,15 +45,17 @@ k=np.log(2)/80
 # contcentration constants - association/disassociation in one - need some ideas for this
 K_p_v = 1e6
 K_p_r = 50
-K_m_v = 1e5
+K_m_v = 1e6
 K_R = 0.5 * R_max
 
 # mRNA production rates - mix of copy number, promotor strength etc - will be scaled with transcription rate
 delta_m_v, delta_m_r = 1, 0
 
-# regulator degradation rates
-alpha_m_r = np.log(2)/20
-alpha_p_r = np.log(2)/60
+# regulator degradation rate multipliers
+multi_m_r = 1
+multi_p_r = 5
+alpha_m_r = alpha_m_v * multi_m_r
+alpha_p_r = alpha_p_v * multi_p_r
 
 ''' Initial conditions'''
 # initial amounts of each product (mRNA and protein from each gene)
@@ -180,7 +182,7 @@ fig, axs = plt.subplot_mosaic([['mv', 'pv_vs_mv'],
                                ['pr', 'pr_vs_pv'],
                                ['R', 'R_vs_pv'],
                                ['Rv', 'R_vs_pv'],
-                               ['Ro', 'R_vs_pv']])
+                               ['Ro', 'R_vs_pv']],figsize=(11,10))
 axs['mv'].plot(solution.t, solution.y[0].T)
 axs['mv'].set_title('mRNA of gene of value')
 axs['pv'].plot(solution.t, solution.y[1].T)
@@ -217,5 +219,7 @@ axs['R_vs_pv'].set_title('ribosomes vs prot val')
 
 
 plt.subplots_adjust(hspace=0.7)
-plt.suptitle('Plots for delta_mv: ' + str(delta_m_v) + 'and delta_mr: ' + str(delta_m_r), fontsize=14)
-plt.show()
+plt.suptitle(f'delta_mv: {delta_m_v}, delta_mr: {delta_m_r}, K_m_v: {K_m_v}, K_R: {K_R}, multi_m_r: {multi_m_r}, and multi_p_r: {multi_p_r}')
+plt.savefig(fname=f'Plot delta_mv: {delta_m_v}, delta_mr: {delta_m_r}, K_m_v: {K_m_v}, K_R: {K_R}, multi_m_r: {multi_m_r}, and multi_p_r: {multi_p_r}.png')
+#plt.show()
+

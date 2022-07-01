@@ -178,7 +178,7 @@ inits = [m_v_init, p_v_init, m_r_init, p_r_init, R_init, R_v_init, R_o_init]
 t = np.linspace(0, 1.7e6/t_base, 1000)
 
 # solving the ODE system
-solution = ig.solve_ivp(model, [min(t),max(t)], inits, t_eval = t, max_step = 0.017, events = no_growth)
+solution = ig.solve_ivp(model, [min(t),max(t)], inits, method='BDF', max_step = 1, t_eval = t, events = no_growth)
 fig, axs = plt.subplot_mosaic([['mv', 'pv_vs_mv'],
                                ['pv', 'pv_vs_mv'],
                                ['mr', 'pr_vs_pv'],

@@ -73,11 +73,11 @@ R_init = R_max * 0.95
 '''Functions and model '''
 # Control functions -  Michaelis-menten-like
 def control_positive(K, substrate):
-    assert substrate >= -1e-3
+    assert substrate >= -1e-5
     return substrate/(K+substrate)
 
 def control_negative(K, substrate):
-    assert substrate >= -1e-3
+    assert substrate >= -1e-5
     return K/(K+substrate)
 
 # tracking if growth stops (R hits zero)
@@ -116,14 +116,14 @@ def model(indep: float, init_deps):
     if R == 0:
         R = 1
     for thing in init_deps:
-        if thing < -1e-3:
+        if thing < -1e-5:
             pretty_print_labels()
             for step, timestamp, values in steps[-5:]:
                 pretty_print_values(step, timestamp, values)
             print("previous rates")
             for values in rates[-5:]:
                 pretty_print_values(None, None, values)
-            assert thing >= -1e-3, thing
+            assert thing >= -1e-5, thing
 
     # Ribosome fractions
     R_v = R * m_v/m_tot

@@ -6,9 +6,10 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 
-''' Model parameters - biologically based '''
+
 
 ENSURE_POSITIVE = False
+''' Model parameters - biologically based '''
 # time base - the base timestep for the various constants in seconds
 t_base = 60
 
@@ -163,7 +164,7 @@ def model(indep: float, init_deps):
         dR = 0
     
     dR_v = (dR * m_v + R * dm_v) / m_tot
-    
+
     dR_o = dR - dR_v
 
     res = [dm_v, dp_v, dm_r, dp_r, dR, dR_v, dR_o]
@@ -178,7 +179,6 @@ t = np.linspace(0, 1.7e6/t_base, 1000)
 
 # solving the ODE system
 solution = ig.solve_ivp(model, [min(t),max(t)], inits, t_eval = t, max_step = 0.017, events = no_growth)
-#, events=no_growth)
 fig, axs = plt.subplot_mosaic([['mv', 'pv_vs_mv'],
                                ['pv', 'pv_vs_mv'],
                                ['mr', 'pr_vs_pv'],

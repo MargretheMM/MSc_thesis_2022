@@ -182,13 +182,14 @@ solution = ig.solve_ivp(model, [min(t),max(t)], inits, method='BDF', max_step = 
 R_v_array = solution.y[4]*solution.y[0]/m_tot
 R_o_array = solution.y[4] - R_v_array
 #plotting
-fig, axs = plt.subplot_mosaic([['mv', 'pv_vs_mv'],
-                               ['pv', 'pv_vs_mv'],
-                               ['mr', 'pr_vs_pv'],
-                               ['pr', 'pr_vs_pv'],
-                               ['R', 'R_vs_pv'],
-                               ['Rv', 'R_vs_pv'],
-                               ['Ro', 'R_vs_pv']],figsize=(11,10))
+fig, axs = plt.subplot_mosaic([['mv', 'phase'],
+                               ['pv', 'phase'],
+                               ['mr', 'phase'],
+                               ['pr', 'textblock'],
+                               ['R', 'textblock'],
+                               ['Rv', 'textblock'],
+                               ['Ro', 'textblock'],
+                              ],figsize=(11,10))
 axs['mv'].plot(solution.t, solution.y[0].T)
 axs['mv'].set_title('mRNA of gene of value')
 axs['pv'].plot(solution.t, solution.y[1].T)
@@ -216,16 +217,45 @@ axs['Ro'].set_title('Other ribosomes')
 axs['Ro'].sharex(axs['mv'])
 #axs['Ro'].set_ylim([0,2e5])
 axs['Ro'].set_xlabel(f'Number of time steps of length {t_base} seconds')
-axs['pv_vs_mv'].plot(solution.y[0].T, solution.y[1].T)
-axs['pv_vs_mv'].set_title('state space prot val vs mRNA val')
-axs['pr_vs_pv'].plot(solution.y[1].T, solution.y[3].T)
-axs['pr_vs_pv'].set_title('state space reg prot vs prot val')
-axs['R_vs_pv'].plot(solution.y[1].T, solution.y[4].T)
-axs['R_vs_pv'].set_title('ribosomes vs prot val')
+#axs['pv_vs_mv'].plot(solution.y[0].T, solution.y[1].T)
+#axs['pv_vs_mv'].set_title('state space prot val vs mRNA val')
+#axs['pr_vs_pv'].plot(solution.y[1].T, solution.y[3].T)
+#axs['pr_vs_pv'].set_title('state space reg prot vs prot val')
+#axs['R_vs_pv'].plot(solution.y[1].T, solution.y[4].T)
+#axs['R_vs_pv'].set_title('ribosomes vs prot val')
 
-
+constants = [
+    [
+        f'Time unit: {t_base}s',
+        f'max_prots: {p_max:.2g}',
+        f'max_ribos: {R_max:.2g}',
+    ],
+    [
+        f'beta_m: {beta_m:.3f}',
+        f'beta_p: {beta_p:.3f}',
+        f'beta_R: {beta_R:.3f}',
+        f'delta_mv: {delta_m_v}',
+        f'delta_mr: {delta_m_r}',
+    ],
+    [
+        f'K_m_v: {K_m_v}',
+        f'K_R: {K_R:g}',
+        f'K_p_v: {K_p_v:g}',
+        f'K_p_r: {K_p_r}',
+    ],
+    [
+        f'alpha_m_v: {alpha_m_v:.2g}',
+        f'alpha_p_v: {alpha_p_v:.2g}',
+        f'alpha_R: {alpha_R:.2g}',
+        f'multi_m_r: {multi_m_r}',
+        f'multi_p_r: {multi_p_r}',
+    ]
+]
+constant_lines = "\n\n".join("\n".join(sublist) for sublist in constants)
+axs["textblock"].get_yaxis().set_visible(False)
+axs["textblock"].get_xaxis().set_visible(False)
+plt.figtext(.66,.15,constant_lines)
 plt.subplots_adjust(hspace=0.7)
-plt.suptitle(f'delta_mv: {delta_m_v}, delta_mr: {delta_m_r}, K_m_v: {K_m_v}, K_R: {K_R}, multi_m_r: {multi_m_r}, and multi_p_r: {multi_p_r}')
 plt.savefig(fname=f'Plot delta_mv: {delta_m_v}, delta_mr: {delta_m_r}, K_m_v: {K_m_v}, K_R: {K_R}, multi_m_r: {multi_m_r}, and multi_p_r: {multi_p_r}.png')
 #plt.show()
 

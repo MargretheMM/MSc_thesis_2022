@@ -9,6 +9,8 @@ import numpy as np
 ''' Model parameters - biologically based '''
 
 ENSURE_POSITIVE = False
+# time base - the base timestep for the various constants in seconds
+t_base = 60
 
 # maximum number of ribosomes available for protein production - currently assume 95% of total - Metzl-Raz 2017 and von der Haar 2008
 R_max= 2e5 * 0.95
@@ -23,23 +25,24 @@ p_max = 3e10
 m_tot = 3e7
 
 # Maximum transcription and translation rates
-# max transcription in codons per minute per cell : codons/sec * sec/minute *number of polymerases = codons/minute Yu and Nielsen 2019
-beta_m = 50/3 * 60
-# maximum translation in aas per minute per ribosome : aa/ribosome/sec * sec/minute = aa/minute
-beta_p = 10 * 60
+# max transcription in codons per polymerase * 50 (assumed number of polymerases which can work on same bit of DNA) = codons/sec Yu and Nielsen 2019
+beta_m = 50/3 * t_base
+# alternative way is calculating max rate similarly to max ribosome production rate, but using half-life: 3e7/2 codons should be produced in 15 minutes, which is about 17 000 codons per second - but this is cell wide -
+# maximum translation in aas per ribosome : aa/ribosome/sec
+beta_p = 10 * t_base
 
 
-# max rate of production of new ribosomes : max rate per minute  =  max ribos per minute - Warner 1999
-beta_R = 2000
+# max rate of production of new ribosomes : max rate per second  =  max ribos per minute / seconds per minute - Warner 1999
+beta_R = 2500 / 60 * t_base 
 
 # Set degradation rates and maximum production rates for mRNA and protein - mRNA: Curran et al 2013, Perez-Ortin et al 2007, protein Christiano 2020
 # rates based on half-life in minutes
-alpha_m_v = np.log(2)/20
-alpha_p_v = np.log(2)/300
-alpha_R = np.log(2)/360
+alpha_m_v = np.log(2)/1200 * t_base
+alpha_p_v = np.log(2)/18000 * t_base
+alpha_R = np.log(2)/21600 * t_base
 
 #Maximum growth rate (based on doubling time of 80 minutes)
-k=np.log(2)/80
+k=np.log(2)/4800 * t_base
 
 ''' Presumed engineerable paramters '''
 # contcentration constants - association/disassociation in one - need some ideas for this
@@ -171,7 +174,7 @@ def model(indep: float, init_deps):
 inits = [m_v_init, p_v_init, m_r_init, p_r_init, R_init, R_v_init, R_o_init]
 
 # time steps
-t = np.linspace(0, 5000, 100)
+t = np.linspace(0, 1.7e6/t_base, 1000)
 
 # solving the ODE system
 solution = ig.solve_ivp(model, [min(t),max(t)], inits, t_eval = t, max_step = 0.017, events = no_growth)
@@ -209,7 +212,7 @@ axs['Ro'].plot(solution.t, solution.y[6].T)
 axs['Ro'].set_title('Other ribosomes')
 axs['Ro'].sharex(axs['mv'])
 #axs['Ro'].set_ylim([0,2e5])
-axs['Ro'].set_xlabel('Time in hours')
+axs['Ro'].set_xlabel(f'Number of time steps of length {t_base} seconds')
 axs['pv_vs_mv'].plot(solution.y[0].T, solution.y[1].T)
 axs['pv_vs_mv'].set_title('state space prot val vs mRNA val')
 axs['pr_vs_pv'].plot(solution.y[1].T, solution.y[3].T)

@@ -74,11 +74,11 @@ R_o_init = R_init - R_v_init
 '''Functions and model '''
 # Control functions -  Michaelis-menten-like
 def control_positive(K, substrate):
-    assert substrate >= 0
+    assert substrate >= -1e-3
     return substrate/(K+substrate)
 
 def control_negative(K, substrate):
-    assert substrate >= 0
+    assert substrate >= -1e-3
     return K/(K+substrate)
 
 # tracking if growth stops (R_o hits zero)
@@ -117,14 +117,14 @@ def model(indep: float, init_deps):
     if R == 0:
         R = 1
     for thing in init_deps:
-        if thing < 0:
+        if thing < -1e-3:
             pretty_print_labels()
-            for step, timestamp, values in steps[-3:]:
+            for step, timestamp, values in steps[-5:]:
                 pretty_print_values(step, timestamp, values)
             print("previous rates")
-            for values in rates[-3:]:
+            for values in rates[-5:]:
                 pretty_print_values(None, None, values)
-            assert thing >= 0, thing
+            assert thing >= -1e-3, thing
 
     # protein level in model
     p_tot = p_v + p_r + R * 12e3

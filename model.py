@@ -12,12 +12,12 @@ ENSURE_POSITIVE = False
 # time base - the base timestep for the various constants in seconds
 t_base = 60
 
-# maximum number of ribosomes available for protein production - currently assume 95% of total - Metzl-Raz 2017 and von der Haar 2008
-R_max= 2e5 * 0.95
+# maximum number of ribosomes available for protein production - currently assume 75% of total - Metzl-Raz 2017 and von der Haar 2008
+R_max= 2e5 * 0.75
 
 
-# total number of RNA polymerases in cell - Borggrefe 2001
-total_pol = 30000
+# total number of RNA polymerases in cell - Borggrefe 2001 - can't acutally use all polymerases on same gene, serial, not parallel.
+# total_pol = 30000
 
 # Maximum number of protein bound amino acids in cell - futcher et al 1999
 p_max = 3e10
@@ -46,13 +46,13 @@ k=np.log(2)/4800 * t_base
 
 ''' Presumed engineerable paramters '''
 # contcentration constants - association/disassociation in one - need some ideas for this
-K_p_v = 1e6
-K_p_r = 50
-K_m_v = 1e6
+K_p_v = 1e9
+K_p_r = 5000
+K_m_v = 1e5
 K_R = 0.5 * R_max
 
-# mRNA production rates - mix of copy number, promotor strength etc - will be scaled with transcription rate
-delta_m_v, delta_m_r = 1, 0
+# mRNA production rates - mix of copy number, promotor strength etc - scales transcription rate
+delta_m_v, delta_m_r = 5, 0
 
 # regulator degradation rate multipliers
 multi_m_r = 1

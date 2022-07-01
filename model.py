@@ -67,9 +67,8 @@ m_v_init = 0.005
 p_v_init = 0.1
 m_r_init = 0
 p_r_init = 0
-R_init = R_max * 0.99
-R_v_init = 5
-R_o_init = R_init - R_v_init
+R_init = R_max * 0.95
+
 
 '''Functions and model '''
 # Control functions -  Michaelis-menten-like
@@ -81,8 +80,8 @@ def control_negative(K, substrate):
     assert substrate >= -1e-3
     return K/(K+substrate)
 
-# tracking if growth stops (R_o hits zero)
-def no_growth(t,y): return y[6]-1
+# tracking if growth stops (R hits zero)
+def no_growth(t,y): return y[4]-1
 # stop simulation if this happens
 no_growth.terminal = True
 
@@ -113,7 +112,7 @@ def model(indep: float, init_deps):
     steps.append((step_number, indep, init_deps))
     if ENSURE_POSITIVE:
         init_deps = [max(val, 0) for val in init_deps]
-    m_v, p_v, m_r, p_r, R, R_v, R_o = init_deps
+    m_v, p_v, m_r, p_r, R = init_deps
     if R == 0:
         R = 1
     for thing in init_deps:
@@ -125,6 +124,10 @@ def model(indep: float, init_deps):
             for values in rates[-5:]:
                 pretty_print_values(None, None, values)
             assert thing >= -1e-3, thing
+
+    # Ribosome fractions
+    R_v = R * m_v/m_tot
+    R_o = R - R_v
 
     # protein level in model
     p_tot = p_v + p_r + R * 12
@@ -162,23 +165,23 @@ def model(indep: float, init_deps):
         dR =  -(alpha_R + gamma) * R
     else:
         dR = 0
-    
-    dR_v = (dR * m_v + R * dm_v) / m_tot
 
-    dR_o = dR - dR_v
-
-    res = [dm_v, dp_v, dm_r, dp_r, dR, dR_v, dR_o]
+    res = [dm_v, dp_v, dm_r, dp_r, dR]
     rates.append(res)
     return res
 
 # list of initial conditions
-inits = [m_v_init, p_v_init, m_r_init, p_r_init, R_init, R_v_init, R_o_init]
+inits = [m_v_init, p_v_init, m_r_init, p_r_init, R_init]
 
 # time steps
 t = np.linspace(0, 1.7e6/t_base, 1000)
 
 # solving the ODE system
-solution = ig.solve_ivp(model, [min(t),max(t)], inits, method='BDF', max_step = 1, t_eval = t, events = no_growth)
+solution = ig.solve_ivp(model, [min(t),max(t)], inits, method='BDF', max_step = 0.5, t_eval = t, events = no_growth)
+#Getting R_v and R_o from solution
+R_v_array = solution.y[4]*solution.y[0]/m_tot
+R_o_array = solution.y[4] - R_v_array
+#plotting
 fig, axs = plt.subplot_mosaic([['mv', 'pv_vs_mv'],
                                ['pv', 'pv_vs_mv'],
                                ['mr', 'pr_vs_pv'],
@@ -204,11 +207,11 @@ axs['R'].plot(solution.t, solution.y[4].T)
 axs['R'].set_title('Ribosomes')
 axs['R'].sharex(axs['mv'])
 #axs['R'].set_ylim([0,2e5])
-axs['Rv'].plot(solution.t, solution.y[5].T)
+axs['Rv'].plot(solution.t, R_v_array.T)
 axs['Rv'].set_title('Value productive ribosomes')
 axs['Rv'].sharex(axs['mv'])
 #axs['Rv'].set_ylim([0,2e5])
-axs['Ro'].plot(solution.t, solution.y[6].T)
+axs['Ro'].plot(solution.t, R_o_array.T)
 axs['Ro'].set_title('Other ribosomes')
 axs['Ro'].sharex(axs['mv'])
 #axs['Ro'].set_ylim([0,2e5])

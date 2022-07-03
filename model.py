@@ -53,7 +53,7 @@ K_m_v = 1e2
 K_R = 0.5 * R_max
 
 # mRNA production rates - mix of copy number, promotor strength etc - scales transcription rate
-delta_m_v, delta_m_r = 5, 0
+delta_m_v, delta_m_r = 5, 0.002
 
 # regulator degradation rate multipliers
 multi_m_r = 1
@@ -256,6 +256,9 @@ axs["textblock"].get_yaxis().set_visible(False)
 axs["textblock"].get_xaxis().set_visible(False)
 plt.figtext(.66,.15,constant_lines)
 plt.subplots_adjust(hspace=0.7)
-plt.savefig(fname=f'Plot delta_mv: {delta_m_v}, delta_mr: {delta_m_r}, K_m_v: {K_m_v}, K_R: {K_R}, multi_m_r: {multi_m_r}, and multi_p_r: {multi_p_r}.png')
-#plt.show()
 
+if __name__ == "__main__":
+    if "--save" in sys.argv:
+        plt.savefig(fname=f'Plot delta_mv: {delta_m_v}, delta_mr: {delta_m_r}, K_m_v: {K_m_v}, K_R: {K_R}, multi_m_r: {multi_m_r}, and multi_p_r: {multi_p_r}.png')
+    if "--noshow" not in sys.argv:
+        plt.show()

@@ -46,9 +46,9 @@ k=np.log(2)/4800 * t_base
 
 ''' Presumed engineerable paramters '''
 # contcentration constants - association/disassociation in one - need some ideas for this
-K_p_v = 1e6
+K_p_v = 5e6
 K_p_r = 2
-K_m_v = 1e2
+K_m_v = 1e3
 K_R = 0.3 * R_productive
 
 # mRNA production rates - mix of copy number, promotor strength etc - scales transcription rate

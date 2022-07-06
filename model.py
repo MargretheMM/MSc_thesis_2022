@@ -274,6 +274,8 @@ plt.subplots_adjust(hspace=0.7)
 
 if __name__ == "__main__":
     if "--save" in sys.argv:
-        plt.savefig(fname=f'Plot delta_mv: {delta_m_v}, delta_mr: {delta_m_r}, K_m_v: {K_m_v}, K_R: {K_R}, multi_m_r: {multi_m_r}, and multi_p_r: {multi_p_r}.png')
+        import datetime
+        name = datetime.datetime.now().isoformat().rsplit(".", 1)[0].replace(":", ".")
+        plt.savefig(fname=f'plot_{name}.png')
     if "--noshow" not in sys.argv:
         plt.show()

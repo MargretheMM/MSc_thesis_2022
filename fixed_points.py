@@ -37,9 +37,9 @@ k=np.log(2)/4800 * t_base
 
 ''' Presumed engineerable paramters '''
 # contcentration constants - association/disassociation in one - need some ideas for this
-K_p_v = 1e6
+K_p_v = 5e6
 K_p_r = 2
-K_m_v = 1e2
+K_m_v = 1e3
 K_R = 0.5 * R_productive
 
 # mRNA production rates - mix of copy number, promotor strength etc - scales transcription rate
@@ -57,24 +57,21 @@ def control_positive(K, substrate):
 def control_negative(K, substrate):
     return K/(K+substrate)
 
-
 # defining symbols
-m_v, p_v, m_r, p_r, R_v, R_o = sp.symbols('m_v, p_v, m_r, p_r, R_v, R_o')
+m_v, p_v, m_r, p_r, R = sp.symbols('m_v, p_v, m_r, p_r, R', nonnegative = True)
 
 # equations
 
 eq1 = sp.Eq(beta_m * delta_m_v *  control_negative(K_p_r, p_r)  - alpha_m_v * m_v,0)
 
-eq2 = sp.Eq(beta_p * R_v * m_v * control_positive(K_R,R) * control_positive(K_m_v,m_v) - (alpha_p_v + gamma) * p_v,0)
+eq2 = sp.Eq(beta_p * R * m_v/m_tot * m_v * control_positive(K_R,R) * control_positive(K_m_v,m_v) - (alpha_p_v + k * (1 - m_v/m_tot) ) * p_v,0)
 
-eq3 = sp.Eq(beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_r * m_r,0)
+eq3 = sp.Eq(beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_v * multi_m_r * m_r,0)
 
-eq4 = sp.Eq(beta_p * m_r * R_o * m_r/(m_tot - m_v)  - (alpha_p_r + gamma) * p_r,0)
+eq4 = sp.Eq(beta_p * m_r * R * (1 - m_v/m_tot) * m_r/(m_tot - m_v)  - (alpha_p_v * multi_p_r + k * (1 - m_v/m_tot)) * p_r,0)
 
-eq5 = sp.Eq(dR = beta_R * R_o / R_productive - (alpha_R + gamma) * R,0)
+eq5 = sp.Eq(beta_R * R * (1 - m_v/m_tot) / R_productive - (alpha_R + k * (1 - m_v/m_tot)) * R,0)
 
 #solving
-sol = sp.solve((eq1, eq2, eq3, eq4, eq5, eq6),(m_v, p_v, m_r, p_r, R_v, R_o))
-print(sol)
-
-
+sol = sp.solve([eq1, eq2, eq3, eq4, eq5],[m_v, p_v, m_r, p_r, R])
+print('Fixed points of the system using current constant values:\n', sol)

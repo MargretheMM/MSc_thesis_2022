@@ -7,14 +7,13 @@ import numpy as np
 
 
 
-
-ENSURE_POSITIVE = False
 ''' Model parameters - biologically based '''
 # time base - the base timestep for the various constants in seconds
 t_base = 1
 
 # maximum number of ribosomes available for protein production - currently assume 75% of total - Metzl-Raz 2017 and von der Haar 2008
-R_max= 2e5 * 0.75
+R_max = 2e5
+R_productive = R_max * 0.75
 
 
 # total number of RNA polymerases in cell - Borggrefe 2001 - can't acutally use all polymerases on same gene, serial, not parallel.
@@ -50,7 +49,7 @@ k=np.log(2)/4800 * t_base
 K_p_v = 1e6
 K_p_r = 2
 K_m_v = 1e2
-K_R = 0.5 * R_max
+K_R = 0.3 * R_productive
 
 # mRNA production rates - mix of copy number, promotor strength etc - scales transcription rate
 delta_m_v, delta_m_r = 5, 0.002
@@ -67,7 +66,7 @@ m_v_init = 0.005
 p_v_init = 0.1
 m_r_init = 0
 p_r_init = 0
-R_init = R_max * 0.95
+R_init = R_productive * 0.80
 
 
 '''Functions and model '''
@@ -228,7 +227,7 @@ constants = [
     [
         f'Time unit: {t_base}s',
         f'max_prots: {p_max:.2g}',
-        f'max_ribos: {R_max:.2g}',
+        f'max_prod_ribos: {R_productive:.2g}',
     ],
     [
         f'beta_m: {beta_m:.3f}',

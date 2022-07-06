@@ -33,7 +33,7 @@ beta_p = 0.01 * t_base
 
 
 # max rate of production of new ribosomes : max rate per second  =  max ribos per minute / seconds per minute - Warner 1999
-beta_R = 2500 / 60 * t_base
+beta_R = 2000 / 60 * t_base
 
 # Set degradation rates and maximum production rates for mRNA and protein - mRNA: Curran et al 2013, Perez-Ortin et al 2007, protein Christiano 2020
 # rates based on half-life in minutes
@@ -46,16 +46,16 @@ k=np.log(2)/4800 * t_base
 
 ''' Presumed engineerable paramters '''
 # contcentration constants - association/disassociation in one - need some ideas for this
-K_p_v = 5e6
+K_p_v = 3e6
 K_p_r = 2
-K_m_v = 1e3
-K_R = 0.3 * R_productive
+K_m_v = 1e4
+K_R = 0.8 * R_productive
 
 # mRNA production rates - mix of copy number, promotor strength etc - scales transcription rate
-delta_m_v, delta_m_r = 5, 0.002
+delta_m_v, delta_m_r = 50, 0.0065
 
 # regulator degradation rate multipliers
-multi_m_r = 1
+multi_m_r = 2
 multi_p_r = 5
 alpha_m_r = alpha_m_v * multi_m_r
 alpha_p_r = alpha_p_v * multi_p_r
@@ -72,11 +72,11 @@ R_init = R_productive * 0.80
 '''Functions and model '''
 # Control functions -  Michaelis-menten-like
 def control_positive(K, substrate):
-    assert substrate >= -1e-5
+    assert substrate >= -1e-5, substrate
     return substrate/(K+substrate)
 
 def control_negative(K, substrate):
-    assert substrate >= -1e-5
+    assert substrate >= -1e-5, substrate
     return K/(K+substrate)
 
 # tracking if growth stops (R hits zero)
@@ -174,9 +174,9 @@ def model(indep: float, init_deps):
     else:
         dp_r = 0
 
-    if (0 < R < R_max):
-        dR = beta_R * R_o / R_max - (alpha_R + gamma) * R
-    elif R >= R_max:
+    if (0 < R < R_productive):
+        dR = beta_R * R_o / R_productive - (alpha_R + gamma) * R
+    elif R >= R_productive:
         dR =  -(alpha_R + gamma) * R
     else:
         dR = 0
@@ -224,15 +224,15 @@ axs['pr'].sharex(axs['mv'])
 axs['R'].plot(solution.t, solution.y[4].T)
 axs['R'].set_title('Ribosomes')
 axs['R'].sharex(axs['mv'])
-axs['R'].set_ylim([0,3e5])
+#axs['R'].set_ylim([0,2e5])
 axs['Rv'].plot(solution.t, R_v_array.T)
 axs['Rv'].set_title('Value productive ribosomes')
 axs['Rv'].sharex(axs['mv'])
-axs['Rv'].set_ylim([0,3e5])
+#axs['Rv'].set_ylim([0,2e5])
 axs['Ro'].plot(solution.t, R_o_array.T)
 axs['Ro'].set_title('Other ribosomes')
 axs['Ro'].sharex(axs['mv'])
-axs['Ro'].set_ylim([0,3e5])
+#axs['Ro'].set_ylim([0,2e5])
 axs['Ro'].set_xlabel(f'Number of time steps of length {t_base} seconds')
 #axs['pv_vs_mv'].plot(solution.y[0].T, solution.y[1].T)
 #axs['pv_vs_mv'].set_title('state space prot val vs mRNA val')

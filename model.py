@@ -189,7 +189,9 @@ def model(indep: float, init_deps):
 inits = [m_v_init, p_v_init, m_r_init, p_r_init, R_init]
 
 # time steps
-t = np.linspace(0, 1.7e6/t_base, 1000)
+t = np.linspace(0, 4.3e5/t_base, 1000)
+# 1.7e7 seconds is 20 days
+# 4.3e5 seconds is 5 days
 
 # solving the ODE system
 solution = ig.solve_ivp(model, [min(t),max(t)], inits, method='BDF', max_step = 0.5, t_eval = t, events = no_growth)

@@ -90,14 +90,15 @@ rates = []
 step_number = 0
 
 def pretty_print_labels():
-    parts = "step, time, m_v, p_v, m_r, p_r, R, R_v, R_o".split(", ")
+    parts = "step, time, R, R_v, R_o".split(", ")
     parts = ["%9s" % key for key in parts]
     print("".join(parts))
 
 def pretty_print_values(step, timestamp, values):
     ts = ("%7.2f" % timestamp) if timestamp is not None else " " * 9
-    vals = ["%1.2g" % value for value in values]
+    vals = ["%1.3g" % value for value in values]
     print(("%9d" % step) if step else " "*7, ts, "".join("%9s" % value for value in vals))
+
 
 # write up equations
 def model(indep: float, init_deps):
@@ -108,21 +109,7 @@ def model(indep: float, init_deps):
     '''
     global step_number
     step_number += 1
-    steps.append((step_number, indep, init_deps))
-    if ENSURE_POSITIVE:
-        init_deps = [max(val, 0) for val in init_deps]
     m_v, p_v, m_r, p_r, R = init_deps
-    if R == 0:
-        R = 1
-    for thing in init_deps:
-        if thing < -1e-5:
-            pretty_print_labels()
-            for step, timestamp, values in steps[-5:]:
-                pretty_print_values(step, timestamp, values)
-            print("previous rates")
-            for values in rates[-5:]:
-                pretty_print_values(None, None, values)
-            assert thing >= -1e-5, thing
 
     # Ribosome fractions
     R_v = R * m_v/m_tot
@@ -133,6 +120,35 @@ def model(indep: float, init_deps):
 
     # current growth rate
     gamma = k * R_o / R
+    
+    #check no negative values
+    vals = np.append(init_deps[-1],[R_v,R_o])
+    steps.append((step_number, indep, vals))
+#    if step_number % 1000 == 0:
+#        pretty_print_labels()
+#        for step, timestamp, values in steps[-1:]:
+#            pretty_print_values(step, timestamp, values)
+#        print("previous rates")
+#        for values in rates[-1:]:
+#            pretty_print_values(None, None, values)        
+    for thing in vals:
+        if thing < -1e-10:
+            pretty_print_labels()
+            for step, timestamp, values in steps[-5:]:
+                pretty_print_values(step, timestamp, values)
+            print("previous rates")
+            for values in rates[-5:]:
+                pretty_print_values(None, None, values)
+            assert thing >= -1e-10, thing
+#    if R > R_max:
+#        pretty_print_labels()
+#        for step, timestamp, values in steps[-5:]:
+#            pretty_print_values(step, timestamp, values)
+#        print("previous rates")
+#        for values in rates[-5:]:
+#            pretty_print_values(None, None, values)
+#            print(alpha_R, gamma, "->", -(alpha_R + gamma) * R)
+#        raise
 
     # equations
     if (0 < m_v < m_tot):
@@ -152,7 +168,7 @@ def model(indep: float, init_deps):
     dm_r = beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_r * m_r
 
     if (0 < p_tot < p_max):
-        dp_r = beta_p * R_o * m_r/(m_tot - m_v) * m_r  - (alpha_p_r + gamma) * p_r
+        dp_r = beta_p * m_r * R_o * m_r/(m_tot - m_v)  - (alpha_p_r + gamma) * p_r
     elif p_tot >= p_max:
         dp_r =  -(alpha_p_r + gamma) * p_r
     else:
@@ -206,15 +222,15 @@ axs['pr'].sharex(axs['mv'])
 axs['R'].plot(solution.t, solution.y[4].T)
 axs['R'].set_title('Ribosomes')
 axs['R'].sharex(axs['mv'])
-#axs['R'].set_ylim([0,2e5])
+axs['R'].set_ylim([0,3e5])
 axs['Rv'].plot(solution.t, R_v_array.T)
 axs['Rv'].set_title('Value productive ribosomes')
 axs['Rv'].sharex(axs['mv'])
-#axs['Rv'].set_ylim([0,2e5])
+axs['Rv'].set_ylim([0,3e5])
 axs['Ro'].plot(solution.t, R_o_array.T)
 axs['Ro'].set_title('Other ribosomes')
 axs['Ro'].sharex(axs['mv'])
-#axs['Ro'].set_ylim([0,2e5])
+axs['Ro'].set_ylim([0,3e5])
 axs['Ro'].set_xlabel(f'Number of time steps of length {t_base} seconds')
 #axs['pv_vs_mv'].plot(solution.y[0].T, solution.y[1].T)
 #axs['pv_vs_mv'].set_title('state space prot val vs mRNA val')

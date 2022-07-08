@@ -84,6 +84,10 @@ def no_growth(t,y): return y[4]-1
 # stop simulation if this happens
 no_growth.terminal = True
 
+# other slow growth check
+def too_slow(rate):
+    assert rate > np.log(2)/36000 * t_base, "culture grows too slowly"
+    
 steps = []
 rates = []
 
@@ -119,8 +123,8 @@ def model(indep: float, init_deps):
     p_tot = p_v + p_r + R * 12
 
     # current growth rate
-    gamma = k * R_o / R
-    
+    gamma = k * R_o / R_productive
+    too_slow(gamma)
     #check no negative values
     vals = np.append(init_deps[-1],[R_v,R_o])
     steps.append((step_number, indep, vals))

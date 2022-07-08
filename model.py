@@ -198,7 +198,7 @@ t = np.linspace(0, 4.3e5/t_base, 1000)
 # 4.3e5 seconds is 5 days
 
 # solving the ODE system
-solution = ig.solve_ivp(model, [min(t),max(t)], inits, method='BDF', max_step = 0.5, t_eval = t, events = no_growth)
+solution = ig.solve_ivp(model, [min(t),max(t)], inits, method='RK45', max_step = 0.3, t_eval = t, events = no_growth)
 #Getting R_v and R_o from solution
 R_v_array = solution.y[4]*solution.y[0]/m_tot
 R_o_array = solution.y[4] - R_v_array

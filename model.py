@@ -46,23 +46,23 @@ k=np.log(2)/4800 * t_base
 
 ''' Presumed engineerable paramters '''
 # contcentration constants - association/disassociation in one - need some ideas for this
-K_p_v = 3e6
+K_p_v = 5e6
 K_p_r = 2
-K_m_v = 1e4
-K_R = 0.8 * R_productive
+K_m_v = 5e3
+K_R = 0.3 * R_productive
 
 # mRNA production rates - mix of copy number, promotor strength etc - scales transcription rate
-delta_m_v, delta_m_r = 50, 0.0065
+delta_m_v, delta_m_r = 10, 0
 
 # regulator degradation rate multipliers
-multi_m_r = 2
+multi_m_r = 1
 multi_p_r = 5
 alpha_m_r = alpha_m_v * multi_m_r
 alpha_p_r = alpha_p_v * multi_p_r
 
 ''' Initial conditions'''
 # initial amounts of each product (mRNA and protein from each gene)
-m_v_init = 0.005
+m_v_init = 0.05
 p_v_init = 0.1
 m_r_init = 0
 p_r_init = 0

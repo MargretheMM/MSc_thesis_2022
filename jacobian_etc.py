@@ -74,14 +74,17 @@ beta_p, beta_m, beta_R, alpha_R, alpha_m_v, alpha_p_v, m_tot, R_productive, k = 
 #eq3 = sp.Eq(beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_v * multi_m_r * m_r,0)
 #print(sp.solve(eq3,[delta_m_r, multi_m_r]))
 
-#eq4 = sp.Eq(beta_p * m_r * R * (1 - m_v/m_tot) * m_r/(m_tot - m_v)  - (alpha_p_v * multi_p_r + k * (1 - m_v/m_tot)) * p_r,0)
+#eq4 = sp.Eq(beta_p * 0.5 * R_productive * (1 - 1e3/m_tot) * 0.5/(m_tot - 1e3)  - (alpha_p_v * multi_p_r + k * (1 - 1e3/m_tot)) * 2,0)
+#print(sp.solve(eq4,multi_p_r))
 
-#eq5 = sp.Eq(beta_R * R * (1 - m_v/m_tot) / R_productive - (alpha_R + k * (1 - m_v/m_tot)) * R,0)
 
-''' Jacobian of model equation matrix'''
+eq5 = sp.Eq(beta_R * R * (1 - m_v/m_tot) / R_productive - (alpha_R + k * R * (1 - m_v/m_tot)/(R_productive)) * R,0)
+print(sp.solve(eq5,R))
+
+''' Jacobian of model equation matrix
 # equation matrix
 eqns = sp.Matrix([beta_m * delta_m_v *  control_negative(K_p_r, p_r)  - alpha_m_v * m_v, beta_p * R * m_v/m_tot * m_v * control_positive(K_R,R) * control_positive(K_m_v,m_v) - (alpha_p_v + k * (1 - m_v/m_tot) ) * p_v, beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_v * multi_m_r * m_r, beta_p * m_r * R * (1 - m_v/m_tot) * m_r/(m_tot - m_v)  - (alpha_p_v * multi_p_r + k * (1 - m_v/m_tot)) * p_r, beta_R * R * (1 - m_v/m_tot) / R_productive - (alpha_R + k * (1 - m_v/m_tot)) * R])
 #variables
 variables = sp.Matrix([m_v, p_v, m_r, p_r, R])
 #jacobian
-eqns.jacobian(variables)
+eqns.jacobian(variables)'''

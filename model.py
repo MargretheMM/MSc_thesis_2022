@@ -178,9 +178,9 @@ def model(indep: float, init_deps):
     else:
         dp_r = 0
 
-    if (0 < R < R_productive):
+    if (0 < R < R_productive) and p_tot < p_max:
         dR = beta_R * R_o / R_productive - (alpha_R + gamma) * R
-    elif R >= R_productive:
+    if R >= R_productive or p_tot+dp_v >= p_max:
         dR =  -(alpha_R + gamma) * R
     else:
         dR = 0

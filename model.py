@@ -83,10 +83,6 @@ def control_negative(K, substrate):
 def no_growth(t,y): return y[4]-1
 # stop simulation if this happens
 no_growth.terminal = True
-
-# other slow growth check
-def too_slow(rate):
-    assert rate > np.log(2)/36000 * t_base, "culture grows too slowly"
     
 steps = []
 rates = []
@@ -124,7 +120,7 @@ def model(indep: float, init_deps):
 
     # current growth rate
     gamma = k * R_o / R_productive
-    too_slow(gamma)
+
     #check no negative values
     vals = np.append(init_deps[-1],[R_v,R_o])
     steps.append((step_number, indep, vals))
@@ -202,10 +198,12 @@ solution = ig.solve_ivp(model, [min(t),max(t)], inits, method='RK45', max_step =
 #Getting R_v and R_o from solution
 R_v_array = solution.y[4]*solution.y[0]/m_tot
 R_o_array = solution.y[4] - R_v_array
+T2_array = np.log(2)/(k * R_o_array/R_productive) / 3600
+
 #plotting
-fig, axs = plt.subplot_mosaic([['mv', 'phase'],
-                               ['pv', 'phase'],
-                               ['mr', 'phase'],
+fig, axs = plt.subplot_mosaic([['mv', 'T2'],
+                               ['pv', 'textblock'],
+                               ['mr', 'textblock'],
                                ['pr', 'textblock'],
                                ['R', 'textblock'],
                                ['Rv', 'textblock'],
@@ -238,6 +236,9 @@ axs['Ro'].set_title('Other ribosomes')
 axs['Ro'].sharex(axs['mv'])
 #axs['Ro'].set_ylim([0,2e5])
 axs['Ro'].set_xlabel(f'Number of time steps of length {t_base} seconds')
+axs['T2'].plot(solution.t, T2_array.T)
+axs['T2'].set_title('Doubling time in hours')
+axs['T2'].set_xlabel(f'Number of time steps of length {t_base} seconds')
 #axs['pv_vs_mv'].plot(solution.y[0].T, solution.y[1].T)
 #axs['pv_vs_mv'].set_title('state space prot val vs mRNA val')
 #axs['pr_vs_pv'].plot(solution.y[1].T, solution.y[3].T)
@@ -272,10 +273,19 @@ constants = [
         f'multi_p_r: {multi_p_r}',
     ]
 ]
+final_vals = [
+                f'Final mRNA of value: {solution.y[0].T[-1]:.3g}',
+                f'Final protein of value: {solution.y[1].T[-1]:.3g}',
+                f'Final regulator mRNA: {solution.y[2].T[-1]:.3g}',
+                f'Final regulator protein: {solution.y[3].T[-1]:.3g}',
+                f'Final number of ribosomes: {solution.y[4].T[-1]:.3g}',
+                f'Final Other ribosomes: {R_o_array.T[-1]:.3g}'
+]
 constant_lines = "\n\n".join("\n".join(sublist) for sublist in constants)
+val_lines = "\n".join(final_vals)
 axs["textblock"].get_yaxis().set_visible(False)
 axs["textblock"].get_xaxis().set_visible(False)
-plt.figtext(.66,.15,constant_lines)
+plt.figtext(.60,.15,constant_lines+"\n\n"+val_lines)
 plt.subplots_adjust(hspace=0.7)
 
 if __name__ == "__main__":

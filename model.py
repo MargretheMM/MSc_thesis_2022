@@ -156,14 +156,14 @@ def model(indep: float, init_deps):
     elif m_v >= m_tot:
         dm_v =  - alpha_m_v * m_v
     else:
-        dm_v = 0
+        dm_v = beta_m * delta_m_v * control_negative(K_p_r, p_r)
 
     if (0 < p_tot < p_max):
-        dp_v = beta_p * R_v * control_positive(K_R,R) * control_positive(K_m_v,m_v) - (alpha_p_v + gamma) * p_v
+        dp_v = beta_p * m_v * 10 * control_positive(K_m_v,m_v) - (alpha_p_v + gamma) * p_v
     elif p_tot >= p_max:
         dp_v =  -(alpha_p_v + gamma) * p_v
     else:
-        dp_v = 0
+        dp_v = beta_p * m_v * 10 * control_positive(K_m_v,m_v)
 
     dm_r = beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_r * m_r
 
@@ -172,14 +172,14 @@ def model(indep: float, init_deps):
     elif p_tot >= p_max:
         dp_r =  -(alpha_p_r + gamma) * p_r
     else:
-        dp_r = 0
+        dp_r = beta_p * R_o * m_r/(m_tot - m_v)
 
     if (0 < R < R_productive) and p_tot < p_max:
         dR = beta_R * R_o / R_productive - (alpha_R + gamma) * R
     if R >= R_productive or p_tot+dp_v >= p_max:
         dR =  -(alpha_R + gamma) * R
     else:
-        dR = 0
+        dR = beta_R * R_o / R_productive
 
     res = [dm_v, dp_v, dm_r, dp_r, dR]
     rates.append(res)

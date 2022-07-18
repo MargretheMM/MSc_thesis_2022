@@ -63,6 +63,7 @@ m_v, p_v, m_r, p_r, R = sp.symbols('m_v, p_v, m_r, p_r, R', real = True)
 delta_m_v, delta_m_r, multi_m_r, multi_p_r, K_p_v, K_p_r, K_m_v, K_R = sp.symbols('delta_m_v, delta_m_r, multi_m_r, multi_p_r, K_p_v, K_p_r, K_m_v, K_R')
 beta_p, beta_m, beta_R, alpha_R, alpha_m_v, alpha_p_v, m_tot, R_productive, k = sp.symbols('beta_p, beta_m, beta_R, alpha_R, alpha_m_v, alpha_p_v, m_tot, R_productive, k')
 
+
 # equations
 
 #eq1 = sp.Eq(beta_m * delta_m_v *  control_negative(2, 2)  - alpha_m_v * m_tot,0)

@@ -25,8 +25,8 @@ p_max = 3e7
 m_tot = 3e4
 
 # Maximum transcription and translation rates
-# max transcription in codons per polymerase * 10 (assumed number of polymerases which can work on same bit of DNA) = codons/sec Yu and Nielsen 2019
-beta_m = 50/300 * t_base
+# max transcription in codons per polymerase *  15 (assumed number of polymerases which can work on same bit of DNA) = codons/sec Yu and Nielsen 2019
+beta_m = 1/4 * t_base
 # alternative way is calculating max rate similarly to max ribosome production rate, but using half-life: 3e7/2 codons should be produced in 15 minutes, which is about 17 000 codons per second - but this is cell wide -
 # maximum translation in aas per ribosome : aa/ribosome/sec
 beta_p = 0.01 * t_base
@@ -41,18 +41,18 @@ alpha_m_v = np.log(2)/1200 * t_base
 alpha_p_v = np.log(2)/18000 * t_base
 alpha_R = np.log(2)/21600 * t_base
 
-#Maximum growth rate (based on doubling time of 80 minutes)
-k=np.log(2)/4800 * t_base
+#Maximum growth rate (based on doubling time of 100 minutes)
+k=np.log(2)/6000 * t_base
 
 ''' Presumed engineerable paramters '''
 # contcentration constants - association/disassociation in one - need some ideas for this
 K_p_v = 5e6
-K_p_r = 2
-K_m_v = 5e3
+K_p_r = 5
+K_m_v = 1e3
 K_R = 0.3 * R_productive
 
 # mRNA production rates - mix of copy number, promotor strength etc - scales transcription rate
-delta_m_v, delta_m_r = 10, 0
+delta_m_v, delta_m_r = 40, 0
 
 # regulator degradation rate multipliers
 multi_m_r = 1
@@ -66,17 +66,17 @@ m_v_init = 0.05
 p_v_init = 0.1
 m_r_init = 0
 p_r_init = 0
-R_init = R_productive * 0.80
+R_init = R_productive * 0.9
 
 
 '''Functions and model '''
 # Control functions -  Michaelis-menten-like
 def control_positive(K, substrate):
-    assert substrate >= -1e-5, substrate
+    assert substrate >= -1e-3, substrate
     return substrate/(K+substrate)
 
 def control_negative(K, substrate):
-    assert substrate >= -1e-5, substrate
+    assert substrate >= -1e-3, substrate
     return K/(K+substrate)
 
 # tracking if growth stops (R hits zero)
@@ -194,7 +194,7 @@ inits = [m_v_init, p_v_init, m_r_init, p_r_init, R_init]
 
 # time steps
 t = np.linspace(0, 4.3e5/t_base, 1000)
-# 1.7e7 seconds is 20 days
+# 1.7e6 seconds is 20 days
 # 4.3e5 seconds is 5 days
 
 # solving the ODE system

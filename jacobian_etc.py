@@ -24,7 +24,7 @@ beta_m = 50/300 * t_base
 beta_p = 0.01 * t_base
 
 # max rate of production of new ribosomes : max rate per second  =  max ribos per minute / seconds per minute - Warner 1999
-beta_R = 2100 / 60 * t_base
+beta_R = 2000 / 60 * t_base
 
 # Set degradation rates and maximum production rates for mRNA and protein - mRNA: Curran et al 2013, Perez-Ortin et al 2007, protein Christiano 2020
 # rates based on half-life in minutes

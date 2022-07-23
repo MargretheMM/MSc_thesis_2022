@@ -45,12 +45,12 @@ p_r_init = 0
 R_init = 1.2e5       
     
 # Values to trial for engineerable parameters
-K_p_r_trial = [0.1,0.5,1,5,10,50]
-K_p_v_trial = [5e6]
-delta_v_trial = [45]
-delta_r_trial = [1e-5,3e-5,7e-5,1e-4,3e-4,7e-4,1e-3,3e-3]
-multi_m_r_trial = [5]
-multi_p_r_trial = [5]
+K_p_r_trial = [0.1,1,10,50]
+K_p_v_trial = [1e5,1e6,1e7]
+delta_v_trial = [20,30]
+delta_r_trial = [1e-5,1e-4,1e-3,1e-2]
+multi_m_r_trial = [1,4,6]
+multi_p_r_trial = [1,3,7,10]
 
 
 
@@ -160,7 +160,7 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
     inits = [m_v_init, p_v_init, m_r_init, p_r_init, R_init]
 
     # time steps
-    t = np.linspace(0, 1e5, 1e4)
+    t = np.linspace(0, 1e5, 10000)
     # 1.7e6 seconds is 20 days
     # 4.3e5 seconds is 5 days
 
@@ -264,7 +264,7 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
             name = datetime.datetime.now().isoformat().rsplit(".", 1)[0].replace(":", ".")
             plt.savefig(fname=f'plot_{name}.png')
             with open(f"data_{name}.txt",'w') as handle:
-                handle.write("\t".join(["score", str(solution.y[1].T[-1]), str(T2_array.T[-1])])+"\n")
+                handle.write("\t".join(["score", str(np.mean(solution.y[1].T[-100:])), str(np.mean(T2_array.T[-100:]))])+"\n")
                 handle.write("\n".join(["values", str(K_p_r), str(K_p_v), str(delta_r), str(delta_v), str(multi_m_r), str(multi_p_r)]))
                 
         if "--noshow" not in sys.argv:

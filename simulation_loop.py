@@ -122,7 +122,7 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
 #                    pretty_print_values(None, None, values)
             assert thing >= -1e-3, thing
 
-        # equations
+# equations
         if (0 < m_v < m_max):
             dm_v = beta_m * delta_v * control_negative(K_p_r, p_r) - alpha_m * m_v
         elif m_v >= m_max:
@@ -135,7 +135,7 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
         elif p_t >= p_max:
             dp_v =  -(alpha_p + gamma) * p_v
         else:
-            dp_v = 0
+            dp_v = beta_p * m_v * 10 * control_positive(K_m_v,m_v)
 
         dm_r = beta_m * delta_r * control_positive(K_p_v,p_v) - alpha_m_r * m_r
 
@@ -144,14 +144,14 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
         elif p_t >= p_max:
             dp_r =  -(alpha_p_r + gamma) * p_r
         else:
-            dp_r = 0
+            dp_r = beta_p * R_o * m_r/(m_max - m_v)
 
         if (0 < R < R_productive) and p_t < p_max:
             dR = beta_R * R_o / R_productive - (alpha_R + gamma) * R
         if R >= R_productive or p_t+dp_v >= p_max:
             dR =  -(alpha_R + gamma) * R
         else:
-            dR = 0
+            dR = beta_R * R_o / R_productive
 
         res = [dm_v, dp_v, dm_r, dp_r, dR]
         return res
@@ -160,7 +160,7 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
     inits = [m_v_init, p_v_init, m_r_init, p_r_init, R_init]
 
     # time steps
-    t = np.linspace(0, 4.3e5, 1000)
+    t = np.linspace(0, 1e5, 1e4)
     # 1.7e6 seconds is 20 days
     # 4.3e5 seconds is 5 days
 

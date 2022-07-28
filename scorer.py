@@ -20,5 +20,5 @@ for filename in files:
     values_by_filename[filename] = parameters
     
 results.sort(key=lambda x: x[3], reverse=True)
-for result in results[:5]:
+for result in results[:10]:
     print(result, values_by_filename[result[0]])

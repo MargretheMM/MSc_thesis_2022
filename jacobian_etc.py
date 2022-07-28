@@ -3,53 +3,26 @@
 import numpy as np
 import sympy as sp
 
-''' Model parameters - biologically based '''
-# time base - the base timestep for the various constants in seconds
-t_base = 1
-
-# maximum number of ribosomes available for protein production - currently assume 75% of total - Metzl-Raz 2017 and von der Haar 2008
-R_max = 2e5
-R_productive = R_max * 0.75
-
-# Maximum number of protein bound amino acids in cell - futcher et al 1999
+# Model parameters - biologically based
+R_productive = 1.5e5
 p_max = 3e7
-# Total codons of mRNA in cell - estimate from Siewiak 2010 - take high esitmate
-m_tot = 3e4
-
-# Maximum transcription and translation rates
-# max transcription in codons per polymerase * 10 (assumed number of polymerases which can work on same bit of DNA) = codons/sec Yu and Nielsen 2019
-beta_m = 50/300 * t_base
-# alternative way is calculating max rate similarly to max ribosome production rate, but using half-life: 3e7/2 codons should be produced in 15 minutes, which is about 17 000 codons per second - but this is cell wide -
-# maximum translation in aas per ribosome : aa/ribosome/sec
-beta_p = 0.01 * t_base
-
-# max rate of production of new ribosomes : max rate per second  =  max ribos per minute / seconds per minute - Warner 1999
-beta_R = 2000 / 60 * t_base
-
-# Set degradation rates and maximum production rates for mRNA and protein - mRNA: Curran et al 2013, Perez-Ortin et al 2007, protein Christiano 2020
-# rates based on half-life in minutes
-alpha_m_v = np.log(2)/1200 * t_base
-alpha_p_v = np.log(2)/18000 * t_base
-alpha_R = np.log(2)/21600 * t_base
-
-#Maximum growth rate (based on doubling time of 80 minutes)
-k=np.log(2)/4800 * t_base
-
-''' Presumed engineerable paramters '''
-# contcentration constants - association/disassociation in one - need some ideas for this
-K_p_v = 5e6
-K_p_r = 2
+m_max = 3e4
+beta_m = 1/4
+beta_p = 0.05
+beta_R = 2000/60
+alpha_m = np.log(2)/1200
+alpha_p = np.log(2)/18000
+alpha_R = np.log(2)/21600
+k = np.log(2)/6000
 K_m_v = 1e3
-K_R = 0.5 * R_productive
+K_R = 4.5e4
+m_v_init = 0.05
+p_v_init = 0.1
+m_r_init = 0
+p_r_init = 0
+R_init = 1.2e5 
 
-# mRNA production rates - mix of copy number, promotor strength etc - scales transcription rate
-delta_m_v, delta_m_r = 5, 0.002
-
-# regulator degradation rate multipliers
-multi_m_r = 1
-multi_p_r = 5
-
-'''Functions and model '''
+# Functions and model
 # Control functions. Currently Michaelis-menten-like (Hill functions, so far n = 1)
 def control_positive(K, substrate):
     return substrate/(K+substrate)
@@ -61,31 +34,31 @@ def control_negative(K, substrate):
 # defining symbols
 m_v, p_v, m_r, p_r, R = sp.symbols('m_v, p_v, m_r, p_r, R', real = True)
 delta_m_v, delta_m_r, multi_m_r, multi_p_r, K_p_v, K_p_r, K_m_v, K_R = sp.symbols('delta_m_v, delta_m_r, multi_m_r, multi_p_r, K_p_v, K_p_r, K_m_v, K_R')
-beta_p, beta_m, beta_R, alpha_R, alpha_m_v, alpha_p_v, m_tot, R_productive, k = sp.symbols('beta_p, beta_m, beta_R, alpha_R, alpha_m_v, alpha_p_v, m_tot, R_productive, k')
+beta_p, beta_m, beta_R, alpha_R, alpha_m_v, alpha_p_v, m_max, R_productive, k = sp.symbols('beta_p, beta_m, beta_R, alpha_R, alpha_m_v, alpha_p_v, m_max, R_productive, k')
 
 
-# equations
+# equilibrium search equations
 
-#eq1 = sp.Eq(beta_m * delta_m_v *  control_negative(2, 2)  - alpha_m_v * m_tot,0)
+eq1 = sp.Eq(beta_m * delta_m_v *  control_negative(2, 2)  - alpha_m_v * m_max,0)
 #print(sp.solve(eq1,delta_m_v))
 
-#eq2 = sp.Eq(beta_p * R * m_v/m_tot * m_v * control_positive(K_R, R) * control_positive(K_m_v,m_v) - (alpha_p_v + k * (1 - m_v/m_tot) ) * p_v,0)
+eq2 = sp.Eq(beta_p * R * m_v/m_max * m_v * control_positive(K_R, R) * control_positive(K_m_v,m_v) - (alpha_p_v + k * (1 - m_v/m_max) ) * p_v,0)
 #print(sp.solve(eq2,m_v))
 
-#eq3 = sp.Eq(beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_v * multi_m_r * m_r,0)
+eq3 = sp.Eq(beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_v * multi_m_r * m_r,0)
 #print(sp.solve(eq3,[delta_m_r, multi_m_r]))
 
-#eq4 = sp.Eq(beta_p * 0.5 * R_productive * (1 - 1e3/m_tot) * 0.5/(m_tot - 1e3)  - (alpha_p_v * multi_p_r + k * (1 - 1e3/m_tot)) * 2,0)
+eq4 = sp.Eq(beta_p * 0.5 * R_productive * (1 - 1e3/m_max) * 0.5/(m_max - 1e3)  - (alpha_p_v * multi_p_r + k * (1 - 1e3/m_max)) * 2,0)
 #print(sp.solve(eq4,multi_p_r))
 
 
-eq5 = sp.Eq(beta_R * R * (1 - m_v/m_tot) / R_productive - (alpha_R + k * R * (1 - m_v/m_tot)/(R_productive)) * R,0)
+eq5 = sp.Eq(beta_R * R * (1 - m_v/m_max) / R_productive - (alpha_R + k * R * (1 - m_v/m_max)/(R_productive)) * R,0)
 print(sp.solve(eq5,R))
 
-''' Jacobian of model equation matrix
+# Jacobian of model equation matrix
 # equation matrix
-eqns = sp.Matrix([beta_m * delta_m_v *  control_negative(K_p_r, p_r)  - alpha_m_v * m_v, beta_p * R * m_v/m_tot * m_v * control_positive(K_R,R) * control_positive(K_m_v,m_v) - (alpha_p_v + k * (1 - m_v/m_tot) ) * p_v, beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_v * multi_m_r * m_r, beta_p * m_r * R * (1 - m_v/m_tot) * m_r/(m_tot - m_v)  - (alpha_p_v * multi_p_r + k * (1 - m_v/m_tot)) * p_r, beta_R * R * (1 - m_v/m_tot) / R_productive - (alpha_R + k * (1 - m_v/m_tot)) * R])
+eqns = sp.Matrix([beta_m * delta_m_v *  control_negative(K_p_r, p_r)  - alpha_m_v * m_v, beta_p * R * m_v/m_max * m_v * control_positive(K_R,R) * control_positive(K_m_v,m_v) - (alpha_p_v + k * (1 - m_v/m_max) ) * p_v, beta_m * delta_m_r * control_positive(K_p_v,p_v) - alpha_m_v * multi_m_r * m_r, beta_p * m_r * R * (1 - m_v/m_max) * m_r/(m_max - m_v)  - (alpha_p_v * multi_p_r + k * (1 - m_v/m_max)) * p_r, beta_R * R * (1 - m_v/m_max) / R_productive - (alpha_R + k * (1 - m_v/m_max)) * R])
 #variables
 variables = sp.Matrix([m_v, p_v, m_r, p_r, R])
 #jacobian
-eqns.jacobian(variables)'''
+eqns.jacobian(variables)

@@ -265,11 +265,12 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
             plt.savefig(fname=f'plot_{name}.png')
             with open(f"data_{name}.txt",'w') as handle:
                 handle.write("\t".join(["score", str(np.mean(solution.y[1].T[-100:])), str(np.mean(T2_array.T[-100:]))])+"\n")
-                handle.write("\n".join(["values", str(K_p_r), str(K_p_v), str(delta_r), str(delta_v), str(multi_m_r), str(multi_p_r)]))
+                handle.write("values"+"\n")
+                handle.write("\n".join(thing for thing in constants[0]))
                 
         if "--noshow" not in sys.argv:
             plt.show()
-    plt.close()            
+    plt.close()             
         
 # run model for combinations of parameters - only using degradation multipliers and K_p_r if also using regulation. 
 for K_p_r in K_p_r_trial:

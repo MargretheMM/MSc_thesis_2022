@@ -21,6 +21,7 @@ import numpy as np
 #        alpha_R: Ribosome degradation rate
 #        k: Maximum growth rate
 #        K_m_v: Concentration constant for protein production based on mRNA concentration
+#        K_R: Concentration constant for protein production based on ribosome number
 #        m_v_init: Initial concentration of mRNA of value
 #        p_v_init: Initial concentration of protein of value
 #        m_r_init: Initial concentration of regulator mRNA
@@ -38,6 +39,7 @@ alpha_p = np.log(2)/18000
 alpha_R = np.log(2)/21600
 k = np.log(2)/6000
 K_m_v = 1e3
+K_R = 4.5e4
 m_v_init = 0.05
 p_v_init = 0.1
 m_r_init = 0
@@ -45,12 +47,12 @@ p_r_init = 0
 R_init = 1.2e5       
     
 # Values to trial for engineerable parameters
-K_p_r_trial = [0.1,1,10,50]
-K_p_v_trial = [1e5,1e6,1e7]
-delta_v_trial = [20,30]
-delta_r_trial = [1e-5,1e-4,1e-3,1e-2]
-multi_m_r_trial = [1,4,6]
-multi_p_r_trial = [1,3,7,10]
+K_p_r_trial = [0.1,1,10]
+K_p_v_trial = [1e6]
+delta_v_trial = [1,15,30,45]
+delta_r_trial = [1e-6,1e-5,1e-4,1e-3]
+multi_m_r_trial = [5]
+multi_p_r_trial = [10]
 
 
 
@@ -113,13 +115,13 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
     #        for values in rates[-1:]:
     #            pretty_print_values(None, None, values)        
         for thing in vals:
-#            if thing < -1e-10:
-#                pretty_print_labels()
-#                for step, timestamp, values in steps[-5:]:
-#                    pretty_print_values(step, timestamp, values)
-#                print("previous rates")
-#                for values in rates[-5:]:
-#                    pretty_print_values(None, None, values)
+            if thing < -1e-3:
+                pretty_print_labels()
+                for step, timestamp, values in steps[-5:]:
+                    pretty_print_values(step, timestamp, values)
+                print("previous rates")
+                for values in rates[-5:]:
+                    pretty_print_values(None, None, values)
             assert thing >= -1e-3, thing
 
 # equations
@@ -131,13 +133,13 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
             dm_v = beta_m * delta_v * control_negative(K_p_r, p_r)
 
         if (0 < p_t < p_max):
-            dp_v = beta_p * m_v * 10 * control_positive(K_m_v,m_v) - (alpha_p + gamma) * p_v
+            dp_v = beta_p * R_v * m_v * control_positive(K_R,R) * control_positive(K_m_v,m_v) - (alpha_p + gamma) * p_v
         elif p_t >= p_max:
             dp_v =  -(alpha_p + gamma) * p_v
         else:
-            dp_v = beta_p * m_v * 10 * control_positive(K_m_v,m_v)
+            dp_v = beta_p * R_v  * control_positive(K_R,R)
 
-        dm_r = beta_m * delta_r * control_positive(K_p_v,p_v) - alpha_m_r * m_r
+        dm_r = beta_p * R_v * m_v * control_positive(K_R,R) * control_positive(K_m_v,m_v) - alpha_m_r * m_r
 
         if (0 < p_t < p_max):
             dp_r = beta_p * R_o * m_r/(m_max - m_v)  - (alpha_p_r + gamma) * p_r
@@ -147,11 +149,11 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
             dp_r = beta_p * R_o * m_r/(m_max - m_v)
 
         if (0 < R < R_productive) and p_t < p_max:
-            dR = beta_R * R_o / R_productive - (alpha_R + gamma) * R
+            dR = beta_R * R_o / R_productive * m_r - (alpha_R + gamma) * R
         if R >= R_productive or p_t+dp_v >= p_max:
             dR =  -(alpha_R + gamma) * R
         else:
-            dR = beta_R * R_o / R_productive
+            dR = beta_R * R_o / R_productive * m_r
 
         res = [dm_v, dp_v, dm_r, dp_r, dR]
         return res
@@ -219,28 +221,28 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
 
     constants = [
         [
-            f'max_prots: {p_max:.2g}',
-            f'max_prod_ribos: {R_productive:.2g}',
+            f'K_p_v: {K_p_v:.2g}',
+            f'K_p_r: {K_p_r:.2g}',
+            f'delta_v: {delta_v}',
+            f'delta_r: {delta_r:.2g}',
+            f'multi_m_r: {multi_m_r}',
+            f'multi_p_r: {multi_p_r}',
         ],
         [
             f'beta_m: {beta_m:.3f}',
             f'beta_p: {beta_p:.3f}',
             f'beta_R: {beta_R:.3f}',
-            f'delta_v: {delta_v}',
-            f'delta_r: {delta_r}',
         ],
         [
-            f'K_m_v: {K_m_v}',
-#            f'K_R: {K_R:g}',
-            f'K_p_v: {K_p_v:g}',
-            f'K_p_r: {K_p_r}',
+            f'K_m_v: {K_m_v:.2g}',
+            f'K_R: {K_R:.2g}',
+            f'max_prots: {p_max:.2g}',
+            f'max_prod_ribos: {R_productive:.2g}',
         ],
         [
             f'alpha_m: {alpha_m:.2g}',
             f'alpha_p: {alpha_p:.2g}',
             f'alpha_R: {alpha_R:.2g}',
-            f'multi_m_r: {multi_m_r}',
-            f'multi_p_r: {multi_p_r}',
         ]
     ]
     final_vals = [
@@ -265,7 +267,8 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
             plt.savefig(fname=f'plot_{name}.png')
             with open(f"data_{name}.txt",'w') as handle:
                 handle.write("\t".join(["score", str(np.mean(solution.y[1].T[-100:])), str(np.mean(T2_array.T[-100:]))])+"\n")
-                handle.write("\n".join(["values", str(K_p_r), str(K_p_v), str(delta_r), str(delta_v), str(multi_m_r), str(multi_p_r)]))
+                handle.write("values"+"\n")
+                handle.write("\n".join(thing for thing in constants[0]))
                 
         if "--noshow" not in sys.argv:
             plt.show()
@@ -289,20 +292,20 @@ for K_p_r in K_p_r_trial:
                             )
                             continue
 
-#for K_p_v in K_p_v_trial:
-#    for delta_v in delta_v_trial:
-#        delta_r = 0
-#        multi_m_r = 0
-#        multi_p_r = 0
-#        K_p_r = 2
-#        try:
-#            run_simulation(K_p_r,K_p_v, delta_r, delta_v, multi_m_r, multi_p_r)  
-#        except AssertionError as err:
-#            print(
-#                err, '\nValues are:',
-#                f'K_p_v: {K_p_v:g}', f'K_p_r: {K_p_r}',
-#                f'delta_v: {delta_v}', f'delta_r: {delta_r}',
-#                f'multi_m_r: {multi_m_r}', f'multi_p_r: {multi_p_r}'
-#            )
-#            continue
-#                             
+for K_p_v in K_p_v_trial:
+    for delta_v in delta_v_trial:
+        delta_r = 0
+        multi_m_r = 0
+        multi_p_r = 0
+        K_p_r = 2
+        try:
+            run_simulation(K_p_r,K_p_v, delta_r, delta_v, multi_m_r, multi_p_r)  
+        except AssertionError as err:
+            print(
+                err, '\nValues are:',
+                f'K_p_v: {K_p_v:g}', f'K_p_r: {K_p_r}',
+                f'delta_v: {delta_v}', f'delta_r: {delta_r}',
+                f'multi_m_r: {multi_m_r}', f'multi_p_r: {multi_p_r}'
+            )
+            continue
+                             

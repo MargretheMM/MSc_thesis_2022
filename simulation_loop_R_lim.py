@@ -32,7 +32,7 @@ R_productive = 1.5e5
 p_max = 3e7
 m_max = 3e4
 beta_m = 1/4
-beta_p = 0.01
+beta_p = 0.05
 beta_R = 2000/60
 alpha_m = np.log(2)/1200
 alpha_p = np.log(2)/18000
@@ -133,11 +133,11 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
             dm_v = beta_m * delta_v * control_negative(K_p_r, p_r)
 
         if (0 < p_t < p_max):
-            dp_v = beta_p * R_v * 5 * control_positive(K_R,R) - (alpha_p + gamma) * p_v
+            dp_v = beta_p * R_v  * control_positive(K_R,R) - (alpha_p + gamma) * p_v
         elif p_t >= p_max:
             dp_v =  -(alpha_p + gamma) * p_v
         else:
-            dp_v = beta_p * R_v * 5 * control_positive(K_R,R)
+            dp_v = beta_p * R_v  * control_positive(K_R,R)
 
         dm_r = beta_m * delta_r * control_positive(K_p_v,p_v) - alpha_m_r * m_r
 
@@ -267,8 +267,8 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
             plt.savefig(fname=f'plot_{name}.png')
             with open(f"data_{name}.txt",'w') as handle:
                 handle.write("\t".join(["score", str(np.mean(solution.y[1].T[-100:])), str(np.mean(T2_array.T[-100:]))])+"\n")
-                handle.write("values")
-                handle.write("\n".join(thing for thing in constants[1]))
+                handle.write("values"+"\n")
+                handle.write("\n".join(thing for thing in constants[0]))
                 
         if "--noshow" not in sys.argv:
             plt.show()

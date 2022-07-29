@@ -6,7 +6,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 
-
+''' Script for running a set of simulations for parameter search. Parameter lists must be entered (lines 50-56).
+'''
 
 #    Model parameters - constants
 #    Paramter values per cell, rates per second, concentration scale of 10^3 codons (per cell)
@@ -104,7 +105,7 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
         # current growth rate
         gamma = k * R_o / R_productive
 
-        #check no negative values
+        #check no negative values - option to print for error finding
         vals = np.append(init_deps,[R_v,R_o])
     #   steps.append((step_number, indep, vals))
     #    if step_number % 1000 == 0:
@@ -173,7 +174,7 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
     R_o_array = solution.y[4] - R_v_array
     T2_array = np.log(2)/(k * R_o_array/R_productive) / 3600
 
-    #plotting
+    #plotting - option for adding y limits commented out
     fig, axs = plt.subplot_mosaic([['mv', 'T2'],
                                    ['pv', 'textblock'],
                                    ['mr', 'textblock'],
@@ -212,12 +213,6 @@ def run_simulation(K_p_r, K_p_v, delta_r, delta_v, multi_m_r, multi_p_r):
     axs['T2'].plot(solution.t, T2_array.T)
     axs['T2'].set_title('Doubling time in hours')
     axs['T2'].set_xlabel(f'Time in seconds')
-    #axs['pv_vs_mv'].plot(solution.y[0].T, solution.y[1].T)
-    #axs['pv_vs_mv'].set_title('state space prot val vs mRNA val')
-    #axs['pr_vs_pv'].plot(solution.y[1].T, solution.y[3].T)
-    #axs['pr_vs_pv'].set_title('state space reg prot vs prot val')
-    #axs['R_vs_pv'].plot(solution.y[1].T, solution.y[4].T)
-    #axs['R_vs_pv'].set_title('ribosomes vs prot val')
 
     constants = [
         [

@@ -39,8 +39,9 @@ for key in sorted(plot_data.keys()):
         index += 1
 
 ax.set(xlabel='time (h)', ylabel = "protein of value amount in 10³ codons")
+ax.yaxis.set_major_formatter('{x:.3g}')
 ax.grid(color="lightgrey")
 ax.legend(loc='lower right')
 
 fig.savefig(f"Plot_{var}_vs_{par}_{round(time_in_hours[299])}.png")
-plt.show()                    
+                  
